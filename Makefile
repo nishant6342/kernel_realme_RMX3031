@@ -555,9 +555,9 @@ KBUILD_CFLAGS	+= $(CLANG_FLAGS)
 KBUILD_AFLAGS	+= $(CLANG_FLAGS)
 export CLANG_FLAGS
 ifeq ($(ld-name),lld)
-KBUILD_CFLAGS += -fuse-ld=lld
+CLANG_FLAGS	+= -fuse-ld=$(shell which $(LD))
 endif
-KBUILD_CPPFLAGS += -Qunused-arguments
+KBUILD_CPPFLAGS	+= -Qunused-arguments
 endif
 
 KBUILD_CFLAGS +=   -DOPLUS_FEATURE_CHG_BASIC
