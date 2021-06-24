@@ -1874,6 +1874,14 @@ int mmc_execute_tuning(struct mmc_card *card)
 			mmc_hostname(host), err);
 		mmc_retune_enable(host);
 	}
+		pr_err("%s: tuning execution failed: %d\n",
+			mmc_hostname(host), err);
+	} else {
+		host->retune_now = 0;
+		host->need_retune = 0;
+		mmc_retune_enable(host);
+	}
+
 	return err;
 }
 
