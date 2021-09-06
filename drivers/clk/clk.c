@@ -50,23 +50,6 @@ static struct hlist_head *all_lists[] = {
 	NULL,
 };
 
-#ifdef CONFIG_DEBUG_FS
-static struct hlist_head *orphan_list[] = {
-	&clk_orphan_list,
-	NULL,
-};
-#endif
-
-/*
- * clk_rate_change_list is used during clk_core_set_rate_nolock() calls to
- * handle vdd_class vote tracking.  core->rate_change_node is added to
- * clk_rate_change_list when core->new_rate requires a different voltage level
- * (core->new_vdd_class_vote) than core->vdd_class_vote.  Elements are removed
- * from the list after unvoting core->vdd_class_vote immediately before
- * returning from clk_core_set_rate_nolock().
- */
-static LIST_HEAD(clk_rate_change_list);
-
 /***    private data structures    ***/
 
 struct clk_core {
@@ -3201,6 +3184,11 @@ static struct dentry *rootdir;
 static int inited = 0;
 static DEFINE_MUTEX(clk_debug_lock);
 static HLIST_HEAD(clk_debug_list);
+
+static struct hlist_head *orphan_list[] = {
+	&clk_orphan_list,
+	NULL,
+};
 
 static void clk_summary_show_one(struct seq_file *s, struct clk_core *c,
 				 int level)
