@@ -440,6 +440,27 @@ CFLAGS_KERNEL +=   -DVENDOR_EDIT
 CFLAGS_MODULE +=   -DVENDOR_EDIT
 #endif /* VENDOR_EDIT */
 
+#ifdef OPLUS_FEATURE_MEMLEAK_DETECT
+#Kui.Zhang@Bsp.Kernel.MM, 2020/05/19, Add for memleak test
+ifeq ($(AGING_DEBUG_MASK),1)
+# enable memleak detect daemon
+OPLUS_MEMLEAK_DETECT := thread
+endif
+
+ifeq ($(TARGET_MEMLEAK_DETECT_TEST),0)
+# disable memleak detect daemon
+OPLUS_MEMLEAK_DETECT := none
+else ifeq ($(TARGET_MEMLEAK_DETECT_TEST),1)
+# enable memleak detect daemon
+OPLUS_MEMLEAK_DETECT := thread
+else ifeq ($(TARGET_MEMLEAK_DETECT_TEST),2)
+# enable memleak detect daemon and kasan
+OPLUS_MEMLEAK_DETECT := all
+endif
+
+export OPLUS_MEMLEAK_DETECT
+#endif
+
 export ARCH SRCARCH CONFIG_SHELL HOSTCC HOSTCFLAGS CROSS_COMPILE AS LD CC
 export CPP AR NM STRIP OBJCOPY OBJDUMP HOSTLDFLAGS HOST_LOADLIBES
 export MAKE AWK GENKSYMS INSTALLKERNEL PERL PYTHON UTS_MACHINE
