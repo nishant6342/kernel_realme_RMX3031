@@ -45,6 +45,9 @@ struct rw_semaphore {
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
 	struct lockdep_map	dep_map;
 #endif
+#ifdef OPLUS_FEATURE_UIFIRST
+	struct task_struct *ux_dep_task;
+#endif /* OPLUS_FEATURE_UIFIRST */
 };
 
 /*
@@ -59,6 +62,10 @@ extern struct rw_semaphore *rwsem_down_write_failed(struct rw_semaphore *sem);
 extern struct rw_semaphore *rwsem_down_write_failed_killable(struct rw_semaphore *sem);
 extern struct rw_semaphore *rwsem_wake(struct rw_semaphore *);
 extern struct rw_semaphore *rwsem_downgrade_wake(struct rw_semaphore *sem);
+
+#ifdef OPLUS_FEATURE_UIFIRST
+#include <linux/uifirst/uifirst_sched_rwsem.h>
+#endif /* OPLUS_FEATURE_UIFIRST */
 
 /* Include the arch specific part */
 #include <asm/rwsem.h>
@@ -81,7 +88,11 @@ static inline int rwsem_is_locked(struct rw_semaphore *sem)
 #endif
 
 #ifdef CONFIG_RWSEM_SPIN_ON_OWNER
+#ifndef OPLUS_FEATURE_UIFIRST
 #define __RWSEM_OPT_INIT(lockname) , .osq = OSQ_LOCK_UNLOCKED, .owner = NULL
+#else /* OPLUS_FEATURE_UIFIRST */
+#define __RWSEM_OPT_INIT(lockname) , .osq = OSQ_LOCK_UNLOCKED, .owner = NULL, .ux_dep_task = NULL
+#endif /* OPLUS_FEATURE_UIFIRST */
 #else
 #define __RWSEM_OPT_INIT(lockname)
 #endif

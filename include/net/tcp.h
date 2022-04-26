@@ -114,6 +114,11 @@ void tcp_time_wait(struct sock *sk, int state, int timeo);
 				 * 63secs of retransmission with the
 				 * current initial RTO.
 				 */
+#ifdef OPLUS_BUG_STABILITY
+//add for fin retrans too many
+#define TCP_ORPHAN_RETRIES 3
+#endif /* OPLUS_BUG_STABILITY */
+
 
 #define TCP_SYNACK_RETRIES 5	/* This is how may retries are done
 				 * when passive opening a connection.
@@ -281,6 +286,10 @@ extern int sysctl_tcp_pacing_ca_ratio;
 extern atomic_long_t tcp_memory_allocated;
 extern struct percpu_counter tcp_sockets_allocated;
 extern unsigned long tcp_memory_pressure;
+
+#ifdef OPLUS_BUG_STABILITY
+extern int sysctl_tcp_ts_control[2];
+#endif /* OPLUS_BUG_STABILITY */
 
 /* optimized version of sk_under_memory_pressure() for TCP sockets */
 static inline bool tcp_under_memory_pressure(const struct sock *sk)
