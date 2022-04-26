@@ -22,7 +22,7 @@
 #else
 #include <linux/soc/qcom/smem.h>
 #endif
-
+#include <linux/uaccess.h>
 #include <linux/slab.h>
 #include <linux/seq_file.h>
 #include <linux/fs.h>
