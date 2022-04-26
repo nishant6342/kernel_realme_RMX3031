@@ -77,6 +77,9 @@ static void __unhash_process(struct task_struct *p, bool group_dead)
 		detach_pid(p, PIDTYPE_SID);
 
 		list_del_rcu(&p->tasks);
+#if defined(OPLUS_FEATURE_MEMLEAK_DETECT) && defined(CONFIG_ION) && defined(CONFIG_DUMP_TASKS_MEM)
+		list_del_rcu(&p->user_tasks);
+#endif
 		list_del_init(&p->sibling);
 		__this_cpu_dec(process_counts);
 	}
@@ -185,6 +188,14 @@ void release_task(struct task_struct *p)
 {
 	struct task_struct *leader;
 	int zap_leader;
+#ifdef CONFIG_OPLUS_FEATURE_FUSE_FS_SHORTCIRCUIT
+	if (p->fpack) {
+		if (p->fpack->iname)
+			__putname(p->fpack->iname);
+		kfree(p->fpack);
+		p->fpack = NULL;
+	}
+#endif /* CONFIG_OPLUS_FEATURE_FUSE_FS_SHORTCIRCUIT */
 repeat:
 	/* don't need to get the RCU readlock here - the process is dead and
 	 * can't be modifying its own credentials. But shut RCU-lockdep up */

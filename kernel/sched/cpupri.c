@@ -50,6 +50,9 @@ static int convert_prio(int prio)
 	return cpupri;
 }
 
+#if defined(OPLUS_FEATURE_UIFIRST) && !defined(CONFIG_MTK_TASK_TURBO)
+extern void drop_ux_task_cpus(struct task_struct *p, struct cpumask *lowest_mask);
+#endif /* OPLUS_FEATURE_UIFIRST */
 /**
  * cpupri_find - find the best (lowest-pri) CPU in the system
  * @cp: The cpupri context
@@ -108,6 +111,10 @@ int cpupri_find(struct cpupri *cp, struct task_struct *p,
 
 		if (lowest_mask) {
 			cpumask_and(lowest_mask, &p->cpus_allowed, vec->mask);
+#if defined(OPLUS_FEATURE_UIFIRST) && !defined(CONFIG_MTK_TASK_TURBO)
+			if (sysctl_uifirst_enabled)
+				drop_ux_task_cpus(p, lowest_mask);
+#endif /* OPLUS_FEATURE_UIFIRST */
 
 			/*
 			 * We have to ensure that we have at least one bit

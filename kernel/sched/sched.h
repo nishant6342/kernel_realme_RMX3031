@@ -928,6 +928,14 @@ struct rq {
 	struct cpuidle_state *idle_state;
 	int idle_state_idx;
 #endif
+#ifdef OPLUS_FEATURE_UIFIRST
+	struct list_head ux_thread_list;
+	int active_ux_balance;
+	struct cpu_stop_work ux_balance_work;
+#endif /* OPLUS_FEATURE_UIFIRST */
+#ifdef OPLUS_FEATURE_UIFIRST
+	u64 ux_task_load;
+#endif /* OPLUS_FEATURE_UIFIRST */
 };
 
 static inline int cpu_of(struct rq *rq)
@@ -2419,5 +2427,13 @@ walt_task_in_cum_window_demand(struct rq *rq, struct task_struct *p)
 #else /* arch_scale_freq_capacity */
 #define arch_scale_freq_invariant()	(false)
 #endif
+
+#if defined(OPLUS_FEATURE_CORE_CTL) && defined(CONFIG_SCHED_CORE_CTL)
+struct sched_avg_stats {
+	int nr;
+	int nr_misfit;
+	int nr_max;
+};
+#endif /* OPLUS_FEATURE_CORE_CTL */
 
 #include "sched_plus.h"

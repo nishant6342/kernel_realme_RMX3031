@@ -11,7 +11,11 @@
  * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
  */
 #include <linux/stop_machine.h>
+#ifdef OPLUS_FEATURE_SPECIALOPT
+inline unsigned long task_util(struct task_struct *p);
+#else
 static inline unsigned long task_util(struct task_struct *p);
+#endif
 static int select_max_spare_capacity(struct task_struct *p, int target);
 int cpu_eff_tp = 1024;
 unsigned long long big_cpu_eff_tp = 1024;
@@ -87,12 +91,12 @@ update_system_overutilized(struct lb_env *env)
 				continue;
 
 			group_util += cpu_util(i);
-			if (cpu_overutilized(i)) {
+			/*if (cpu_overutilized(i)) {
 				if (capacity_orig_of(i) == min_capacity) {
 					intra_overutil = true;
 					break;
 				}
-			}
+			}*/
 		}
 
 		/*

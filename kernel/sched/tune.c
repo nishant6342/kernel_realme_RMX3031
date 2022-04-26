@@ -665,6 +665,9 @@ int schedtune_cpu_boost(int cpu)
 	return bg->boost_max;
 }
 
+#if defined(OPLUS_FEATURE_UIFIRST) && !defined(CONFIG_MTK_TASK_TURBO)
+extern bool test_task_ux(struct task_struct *task);
+#endif /* OPLUS_FEATURE_UIFIRST */
 int schedtune_task_boost(struct task_struct *p)
 {
 	struct schedtune *st;
@@ -677,11 +680,41 @@ int schedtune_task_boost(struct task_struct *p)
 	rcu_read_lock();
 	st = task_schedtune(p);
 	task_boost = st->boost;
+#if defined(OPLUS_FEATURE_UIFIRST) && !defined(CONFIG_MTK_TASK_TURBO)
+	if (sysctl_uifirst_enabled && sysctl_launcher_boost_enabled && p->static_ux == 2) {
+		task_boost = 60;
+	}
+#endif /* OPLUS_FEATURE_UIFIRST */
 	rcu_read_unlock();
 
 	return task_boost;
 }
 
+#ifdef CONFIG_MTK_SCHED_BOOST
+#include "eas_plus.h"
+#include <../../drivers/misc/mediatek/sched/sched_ctl.h>
+/* For multi-scheduling boost support */
+extern int sysctl_animation_type;
+extern int sched_boost_type;
+void oplus_task_sched_boost(struct task_struct *p, int *task_prefer)
+{
+        int boost = sched_boost_type == SCHED_FG_BOOST? 1 :0;
+        struct schedtune *st = NULL;
+        if(!boost)
+                return;
+//filter top-app and foreground
+        rcu_read_lock();
+        st = task_schedtune(p);
+        if (((st-> idx == 3) || (st-> idx == 1))){
+		if (READ_ONCE(p->se.avg.util_avg) > sysctl_boost_task_threshold){
+			*task_prefer = SCHED_PREFER_MEDIUM;
+		}
+        }
+	else
+		*task_prefer = SCHED_PREFER_LITTLE;
+	rcu_read_unlock();
+}
+#endif
 int schedtune_prefer_idle(struct task_struct *p)
 {
 	struct schedtune *st;
@@ -694,6 +727,11 @@ int schedtune_prefer_idle(struct task_struct *p)
 	rcu_read_lock();
 	st = task_schedtune(p);
 	prefer_idle = st->prefer_idle;
+#if defined(OPLUS_FEATURE_UIFIRST) && !defined(CONFIG_MTK_TASK_TURBO)
+	if (sysctl_uifirst_enabled && sysctl_launcher_boost_enabled && test_task_ux(p)) {
+		prefer_idle = 1;
+	}
+#endif /* OPLUS_FEATURE_UIFIRST */
 	rcu_read_unlock();
 
 	return prefer_idle;
