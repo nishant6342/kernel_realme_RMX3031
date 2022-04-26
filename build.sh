@@ -29,7 +29,7 @@ make -j$(nproc --all) O=out \
 
 function zupload()
 {
-git clone --depth=1 https://github.com/sarthakroy2002/AnyKernel3.git AnyKernel
+git clone --depth=1 https://github.com/sarthakroy2002/AnyKernel3.git -b cupida  AnyKernel
 cp out/arch/arm64/boot/Image.gz-dtb AnyKernel
 cd AnyKernel
 zip -r9 Test-OSS-KERNEL-cupida-NEOLIT.zip *
