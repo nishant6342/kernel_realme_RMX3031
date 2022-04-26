@@ -353,6 +353,9 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 }
 EXPORT_SYMBOL(vm_mmap);
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+#define KMALLOC_MAX_PAGES 8
+#endif /*OPLUS_FEATURE_PERFORMANCE*/
 /**
  * kvmalloc_node - attempt to allocate physically contiguous memory, but upon
  * failure, fall back to non-contiguous (vmalloc) allocation.
@@ -375,6 +378,11 @@ void *kvmalloc_node(size_t size, gfp_t flags, int node)
 	gfp_t kmalloc_flags = flags;
 	void *ret;
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+	/*do not attempt kmalloc if we need more than KMALLOC_MAX_PAGES pages at once*/
+	if (size >= KMALLOC_MAX_PAGES * PAGE_SIZE)
+		goto use_vmalloc;
+#endif /*OPLUS_FEATURE_PERFORMANCE*/
 	/*
 	 * vmalloc uses GFP_KERNEL for some internal allocations (e.g page tables)
 	 * so the given set of flags has to be compatible.
@@ -404,7 +412,9 @@ void *kvmalloc_node(size_t size, gfp_t flags, int node)
 	 */
 	if (ret || size <= PAGE_SIZE)
 		return ret;
-
+#ifdef OPLUS_FEATURE_PERFORMANCE
+use_vmalloc:
+#endif
 	return __vmalloc_node_flags_caller(size, node, flags,
 			__builtin_return_address(0));
 }

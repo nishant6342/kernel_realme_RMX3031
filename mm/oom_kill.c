@@ -412,6 +412,13 @@ static void dump_tasks(struct mem_cgroup *memcg, const nodemask_t *nodemask)
 	rcu_read_unlock();
 }
 
+/* show tasks' memory usage */
+void show_task_mem(void)
+{
+	if (sysctl_oom_dump_tasks)
+		dump_tasks(NULL, NULL);
+}
+
 /* dump extra info: HW memory usage */
 static void oom_dump_extra_info(void)
 {
