@@ -16,6 +16,27 @@
 
 #include <lcm_drv.h>
 
+//#ifdef OPLUS_FEATURE_LCD
+extern struct LCM_DRIVER nt36525b_hlt_psc_ac_boe_hdp_dsi_vdo_lcm_drv; //Add for pascal
+//#endif //OPLUS_FEATURE_LCD
+
+#ifdef VENDOR_EDIT
+extern struct LCM_DRIVER nt36672c_fhdp_dsi_vdo_tianma_zal1852_lcm_drv; // Add for sala
+extern struct LCM_DRIVER nt36672c_fhdp_dsi_vdo_jdi_zal1852_lcm_drv; // Add for Sala
+
+#endif //ODM_HQ_EDIT
+#ifdef OPLUS_BUG_STABILITY
+/* YongPeng.Yi@PSW.MM.Display.LCD.Machine 2019/09/21, Add for 19151 lcm ic samsung*/
+extern struct LCM_DRIVER oppo19151_samsung_ams644va04_1080p_dsi_cmd_lcm_drv;
+extern struct LCM_DRIVER oppo18531_tianma_td4330_1080p_dsi_cmd_lcm_drv;
+extern struct LCM_DRIVER oppo18531_dpt_jdi_td4330_1080p_dsi_cmd_lcm_drv;
+extern struct LCM_DRIVER oppo18531_dsjm_jdi_td4330_1080p_dsi_cmd_lcm_drv;
+extern struct LCM_DRIVER oppo18531_tm_himax83112a_2_1080p_dsi_vdo_lcm_drv;
+extern struct LCM_DRIVER oppo18531_dpt_jdi_himax83112a_2_1080p_dsi_vdo_lcm_drv;
+extern struct LCM_DRIVER oppo18531_tm_nt36670a_1080p_dsi_cmd_lcm_drv;
+extern struct LCM_DRIVER oppo18531_dsjm_jdi_himax83112b_1080p_dsi_cmd_lcm_drv;
+#endif /* OPLUS_BUG_STABILITY */
+
 extern struct LCM_DRIVER otm1282a_hd720_dsi_vdo_60hz_lcm_drv;
 extern struct LCM_DRIVER otm1282a_hd720_dsi_vdo_lcm_drv;
 extern struct LCM_DRIVER nt35595_fhd_dsi_cmd_truly_8163_lcm_drv;

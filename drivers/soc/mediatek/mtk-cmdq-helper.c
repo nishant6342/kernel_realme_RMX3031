@@ -21,7 +21,10 @@
 #endif
 
 #endif
-
+#ifdef MTK_DRM_ADVANCE
+//#ifdef VENDOR_EDIT
+extern bool oplus_dc_set;
+#endif
 #define CMDQ_ARG_A_WRITE_MASK	0xffff
 #define CMDQ_WRITE_ENABLE_MASK	BIT(0)
 #define CMDQ_EOC_IRQ_EN		BIT(0)
@@ -1250,8 +1253,16 @@ s32 cmdq_pkt_poll_timeout(struct cmdq_pkt *pkt, u32 value, u8 subsys,
 	cmdq_pkt_logic_command(pkt, CMDQ_LOGIC_ADD, reg_counter, &lop,
 		&rop);
 
+#ifdef MTK_DRM_ADVANCE
+//#ifdef VENDOR_EDIT
+	if (!oplus_dc_set) {
 	cmdq_pkt_sleep(pkt, CMDQ_POLL_TICK, reg_gpr);
-
+	oplus_dc_set = false;
+	}
+//#endif /* VENDOR_EDIT */
+#else
+	cmdq_pkt_sleep(pkt, CMDQ_POLL_TICK, reg_gpr);
+#endif /* MTK_DRM_ADVANCE */
 	/* loop to begin */
 	if (absolute) {
 		cmd_pa = cmdq_pkt_get_pa_by_offset(pkt, begin_mark);

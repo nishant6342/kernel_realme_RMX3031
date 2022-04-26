@@ -169,3 +169,8 @@ config TOUCHSCREEN_MTK_GT9157
 source "drivers/input/touchscreen/mediatek/GT9157/Kconfig"
 
 endif
+
+# Tongxing.Liu@ODM_WT.BSP.Touchscreen.Base,2019/10/04,bringup add for xl and hlt touchscreen mould config.
+source "drivers/input/touchscreen/mediatek/ili9881h/Kconfig"
+source "drivers/input/touchscreen/mediatek/NT36525B/Kconfig"
+

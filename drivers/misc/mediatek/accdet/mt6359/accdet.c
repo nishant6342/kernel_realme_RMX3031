@@ -73,7 +73,7 @@
 #define EINT_PIN_PLUG_IN        (1)
 #define EINT_PIN_PLUG_OUT       (0)
 #define EINT_PIN_MOISTURE_DETECTED (2)
-
+void __attribute__((weak)) switch_headset_state(int headset_state) {return;}
 #ifdef CONFIG_ACCDET_EINT_IRQ
 enum pmic_eint_ID {
 	NO_PMIC_EINT = 0,
@@ -2151,6 +2151,9 @@ static int pmic_eint_queue_work(int eintID)
 			accdet_set_debounce(accdet_state011,
 				cust_pwm_deb->debounce3);
 			cur_eint_state = EINT_PIN_PLUG_OUT;
+			//YunRui.Chen@bsp.tp 2020/0227 add for notifying touchpanel switch headset mode when detected plug in
+			pr_info("[TP] going to switch headset mode [%d] \n", __func__, 1);
+			switch_headset_state(0);
 		} else {
 			if (gmoistureID != M_PLUG_OUT) {
 				cur_eint_state = EINT_PIN_PLUG_IN;
@@ -2160,6 +2163,9 @@ static int pmic_eint_queue_work(int eintID)
 					jiffies + MICBIAS_DISABLE_TIMER);
 				}
 			}
+			//YunRui.Chen@bsp.tp 2020/0227 add for notifying touchpanel switch headset mode when detected plug in
+			pr_info("[TP] going to switch headset mode [%d] \n", __func__, 0);
+			switch_headset_state(1);
 		}
 #if PMIC_ACCDET_KERNEL
 		ret = queue_work(eint_workqueue, &eint_work);

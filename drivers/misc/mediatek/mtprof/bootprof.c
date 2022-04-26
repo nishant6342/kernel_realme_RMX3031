@@ -25,6 +25,7 @@
 
 #include "internal.h"
 #include "mtk_sched_mon.h"
+#include "mt-plat/mtk_printk_ctrl.h"
 
 #define BOOT_STR_SIZE 256
 #define BUF_COUNT 12
@@ -213,6 +214,7 @@ static void bootup_finish(void)
 #ifdef BOOT_UP_DISABLE_MRDUMPKEY
 	mrdump_key_shutdown(NULL);
 #endif
+        mt_disable_uart();//disable uart log
 }
 
 static void mt_bootprof_switch(int on)

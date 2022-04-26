@@ -55,6 +55,11 @@
 #include "ufs-mtk-dbg.h"
 #include "ufs-mtk-block.h"
 #include "ufs-mtk-platform.h"
+#ifdef VENDOR_EDIT
+//PSW.BSP.Storage.Ufs, 2018-12-19 add for ufs device in /proc/devinfo
+#include <soc/oppo/device_info.h>
+#endif /* VENDOR_EDIT */
+
 #ifdef CONFIG_MTK_AEE_FEATURE
 #include <mt-plat/aee.h>
 #endif
@@ -190,6 +195,13 @@ struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
 /* MTK PATCH: For reference of ufs_pm_lvl_states array size from outside */
 const int ufs_pm_lvl_states_size = ARRAY_SIZE(ufs_pm_lvl_states);
 
+#ifdef VENDOR_EDIT
+int ufsplus_tw_status = 0;
+EXPORT_SYMBOL(ufsplus_tw_status);
+int ufsplus_hpb_status = 0;
+EXPORT_SYMBOL(ufsplus_hpb_status);
+#endif
+
 static inline enum ufs_dev_pwr_mode
 ufs_get_pm_lvl_to_dev_pwr_mode(enum ufs_pm_level lvl)
 {
@@ -260,38 +272,6 @@ static struct ufs_dev_fix ufs_fixups[] = {
 		UFS_DEVICE_QUIRK_WRITE_BOOSETER_FLUSH),
 	UFS_FIX(UFS_VENDOR_TOSHIBA, "THGJFCT2T84BAKCB",
 		UFS_DEVICE_QUIRK_WRITE_BOOSETER_FLUSH),
-
-#if defined(CONFIG_SCSI_SKHPB)
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H28S",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ15ACPMA",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ15AECMA",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ15AECMM",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ15AFAMA",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ15AFAMM",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ15AJAMM",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ21AECMM",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ21AECMZ",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ21AFAMM",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ21AFAMZ",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ21AJAMM",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ21AHDMM",
-		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
-#endif
-
 
 	END_FIX
 };
@@ -1771,6 +1751,87 @@ out:
 	return count;
 }
 
+#ifdef OPLUS_FEATURE_MIDAS
+//Jinghua.Yu@BSP.Storage.UFS 2020/06/12, Add t for ufs transmission_status for midas
+static ssize_t ufshcd_transmission_status_data_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct ufs_hba *hba = dev_get_drvdata(dev);
+
+	return snprintf(buf, PAGE_SIZE,
+					"transmission_status_enable:%u\n"
+					"gear_min_write_sec:%llu\n"
+					"gear_max_write_sec:%llu\n"
+					"gear_min_read_sec:%llu\n"
+					"gear_max_read_sec:%llu\n"
+					"gear_min_write_us:%llu\n"
+					"gear_max_write_us:%llu\n"
+					"gear_min_read_us:%llu\n"
+					"gear_max_read_us:%llu\n"
+					"gear_min_dev_us:%llu\n"
+					"gear_max_dev_us:%llu\n"
+					"gear_min_other_sec:%llu\n"
+					"gear_max_other_sec:%llu\n"
+					"gear_min_other_us:%llu\n"
+					"gear_max_other_us:%llu\n"
+					"scsi_send_count:%llu\n"
+					"dev_cmd_count:%llu\n",
+					hba->ufs_transmission_status.transmission_status_enable,
+					hba->ufs_transmission_status.gear_min_write_sec,
+					hba->ufs_transmission_status.gear_max_write_sec,
+					hba->ufs_transmission_status.gear_min_read_sec,
+					hba->ufs_transmission_status.gear_max_read_sec,
+					hba->ufs_transmission_status.gear_min_write_us,
+					hba->ufs_transmission_status.gear_max_write_us,
+					hba->ufs_transmission_status.gear_min_read_us,
+					hba->ufs_transmission_status.gear_max_read_us,
+					hba->ufs_transmission_status.gear_min_dev_us,
+					hba->ufs_transmission_status.gear_max_dev_us,
+					hba->ufs_transmission_status.gear_min_other_sec,
+					hba->ufs_transmission_status.gear_max_other_sec,
+					hba->ufs_transmission_status.gear_min_other_us,
+					hba->ufs_transmission_status.gear_max_other_us,
+					hba->ufs_transmission_status.scsi_send_count,
+					hba->ufs_transmission_status.dev_cmd_count);
+}
+
+static ssize_t ufshcd_transmission_status_data_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct ufs_hba *hba = dev_get_drvdata(dev);
+	u32 value;
+
+	if (kstrtou32(buf, 0, &value))
+		return -EINVAL;
+
+	value = !!value;
+
+	if (value) {
+		hba->ufs_transmission_status.transmission_status_enable = 1;
+	} else {
+		hba->ufs_transmission_status.transmission_status_enable = 0;
+		memset(&hba->ufs_transmission_status, 0, sizeof(struct ufs_transmission_status_t));
+	}
+
+	return count;
+}
+
+static void ufshcd_transmission_status_init_sysfs(struct ufs_hba *hba)
+{
+	hba->ufs_transmission_status_attr.show = ufshcd_transmission_status_data_show;
+	hba->ufs_transmission_status_attr.store = ufshcd_transmission_status_data_store;
+	sysfs_attr_init(&hba->ufs_transmission_status_attr.attr);
+	hba->ufs_transmission_status_attr.attr.name = "ufs_transmission_status";
+	hba->ufs_transmission_status_attr.attr.mode = 0644;
+	if (device_create_file(hba->dev, &hba->ufs_transmission_status_attr))
+		dev_err(hba->dev, "Failed to create sysfs for ufs_transmission_status_attr\n");
+
+	/*init the struct ufs_transmission_status*/
+	memset(&hba->ufs_transmission_status, 0, sizeof(struct ufs_transmission_status_t));
+	hba->ufs_transmission_status.transmission_status_enable = 1;
+}
+#endif /*OPLUS_FEATURE_MIDAS*/
+
 static void ufshcd_clkscaling_init_sysfs(struct ufs_hba *hba)
 {
 	hba->clk_scaling.enable_attr.show = ufshcd_clkscale_enable_show;
@@ -1936,6 +1997,12 @@ static void ufshcd_gate_work(struct work_struct *work)
 	unsigned long flags;
 
 	spin_lock_irqsave(hba->host->host_lock, flags);
+#ifdef VENDOR_EDIT
+	if (hba->clk_gating.state == CLKS_OFF)
+	{
+		goto rel_lock;
+	}
+#endif
 	/*
 	 * In case you are here to cancel this work the gating state
 	 * would be marked as REQ_CLKS_ON. In this case save time by
@@ -2241,6 +2308,16 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
 		ufshcd_cond_add_cmd_trace(hba, task_tag, UFS_TRACE_SEND);
 	else
 		ufshcd_cond_add_cmd_trace(hba, task_tag, UFS_TRACE_DEV_SEND);
+#ifdef OPLUS_FEATURE_MIDAS
+//Jinghua.Yu@BSP.Storage.UFS 2020/06/12, Add t for ufs transmission_status for midas
+	if (hba->ufs_transmission_status.transmission_status_enable) {
+		if(hba->lrb[task_tag].cmd) {
+			hba->ufs_transmission_status.scsi_send_count++;
+		} else {
+			hba->ufs_transmission_status.dev_cmd_count++;
+		}
+	}
+#endif
 }
 
 /**
@@ -3046,6 +3123,7 @@ send_orig_cmd:
 		req_sent = true;
 		pre_req_err = -EBUSY;
 		atomic64_inc(&hba->ufsf.ufshpb_lup[add_lrbp->lun]->pre_req_cnt);
+		ufsf_para.pre_req++;
 	}
 #endif
 	ufshcd_vops_setup_xfer_req(hba, tag, (lrbp->cmd ? true : false));
@@ -4479,6 +4557,26 @@ static int ufshcd_link_recovery(struct ufs_hba *hba)
 	return ret;
 }
 
+#if defined(VENDOR_EDIT) && defined(CONFIG_UFSFEATURE)
+static void oppo_ufs_update_h8_info(struct ufs_hba *hba, bool hibern8_enter){
+	u64 calc_h8_time_ms = 0;
+	if (hibern8_enter) {
+		ufsf_para.hibern8_enter_ts = ktime_get();
+	}
+	else {
+		calc_h8_time_ms = (u64)ktime_ms_delta(ktime_get(), ufsf_para.hibern8_enter_ts);
+		if (calc_h8_time_ms > 99) {
+			ufsf_para.hibern8_enter_count_100ms++;
+			ufsf_para.hibern8_amount_ms_100ms += calc_h8_time_ms;
+			}
+		if (ufsf_para.hibern8_max_ms < calc_h8_time_ms)
+			ufsf_para.hibern8_max_ms = calc_h8_time_ms;
+		ufsf_para.hibern8_amount_ms += calc_h8_time_ms;
+		ufsf_para.hibern8_enter_count++;
+	}
+}
+#endif
+
 static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
 {
 	int ret;
@@ -4532,6 +4630,9 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
 								POST_CHANGE);
 		dev_dbg(hba->dev, "%s: Hibern8 Enter at %lld us", __func__,
 			ktime_to_us(ktime_get()));
+#if defined(VENDOR_EDIT) && defined(CONFIG_UFSFEATURE)
+		oppo_ufs_update_h8_info(hba, true);
+#endif
 	}
 
 	return ret;
@@ -4576,6 +4677,9 @@ int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
 								POST_CHANGE);
 		hba->ufs_stats.last_hibern8_exit_tstamp = ktime_get();
 		hba->ufs_stats.hibern8_exit_cnt++;
+#if defined(VENDOR_EDIT) && defined(CONFIG_UFSFEATURE)
+		oppo_ufs_update_h8_info(hba, false);
+#endif
 	}
 
 	return ret;
@@ -5654,6 +5758,62 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
 		complete(hba->uic_async_done);
 }
 
+#ifdef OPLUS_FEATURE_MIDAS
+//Jinghua.Yu@BSP.Storage.UFS 2020/06/12, Add t for ufs transmission_status for midas
+static void ufshcd_lrb_scsicmd_time_statistics(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+{
+	if (lrbp->cmd->cmnd[0] == WRITE_10 || lrbp->cmd->cmnd[0] == WRITE_16) {
+		if (hba->pwr_info.gear_tx == 1) {
+			hba->ufs_transmission_status.gear_min_write_sec += blk_rq_sectors(lrbp->cmd->request);
+			hba->ufs_transmission_status.gear_min_write_us +=
+				ktime_us_delta(lrbp->complete_time_stamp, lrbp->issue_time_stamp);
+		}
+
+		if (hba->pwr_info.gear_tx == 3 || hba->pwr_info.gear_tx == 4) {
+			hba->ufs_transmission_status.gear_max_write_sec += blk_rq_sectors(lrbp->cmd->request);
+			hba->ufs_transmission_status.gear_max_write_us +=
+				ktime_us_delta(lrbp->complete_time_stamp, lrbp->issue_time_stamp);
+		}
+	} else if (lrbp->cmd->cmnd[0] == READ_10 || lrbp->cmd->cmnd[0] == READ_16) {
+		if (hba->pwr_info.gear_rx == 1) {
+			hba->ufs_transmission_status.gear_min_read_sec += blk_rq_sectors(lrbp->cmd->request);
+			hba->ufs_transmission_status.gear_min_read_us +=
+				ktime_us_delta(lrbp->complete_time_stamp, lrbp->issue_time_stamp);
+		}
+
+		if (hba->pwr_info.gear_rx == 3 || hba->pwr_info.gear_rx == 4) {
+			hba->ufs_transmission_status.gear_max_read_sec += blk_rq_sectors(lrbp->cmd->request);
+			hba->ufs_transmission_status.gear_max_read_us +=
+				ktime_us_delta(lrbp->complete_time_stamp, lrbp->issue_time_stamp);
+		}
+	} else {
+		if (hba->pwr_info.gear_rx == 1) {
+			hba->ufs_transmission_status.gear_min_other_sec += blk_rq_sectors(lrbp->cmd->request);
+			hba->ufs_transmission_status.gear_min_other_us += ktime_us_delta(lrbp->complete_time_stamp, lrbp->issue_time_stamp);
+		}
+
+		if (hba->pwr_info.gear_rx == 3 || hba->pwr_info.gear_rx == 4) {
+			hba->ufs_transmission_status.gear_max_other_sec += blk_rq_sectors(lrbp->cmd->request);
+			hba->ufs_transmission_status.gear_max_other_us += ktime_us_delta(lrbp->complete_time_stamp, lrbp->issue_time_stamp);
+		}
+	}
+
+	return;
+}
+
+static void ufshcd_lrb_devcmd_time_statistics(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+{
+	if (hba->pwr_info.gear_tx == 1) {
+		hba->ufs_transmission_status.gear_min_dev_us +=
+			ktime_us_delta(lrbp->complete_time_stamp, lrbp->issue_time_stamp);
+	}
+
+	if (hba->pwr_info.gear_tx == 3 || hba->pwr_info.gear_tx == 4) {
+		hba->ufs_transmission_status.gear_max_dev_us +=
+			ktime_us_delta(lrbp->complete_time_stamp, lrbp->issue_time_stamp);
+	}
+}
+#endif /*OPLUS_FEATURE_MIDAS*/
 /**
  * __ufshcd_transfer_req_compl - handle SCSI and query command completion
  * @hba: per adapter instance
@@ -5690,7 +5850,7 @@ static int __ufshcd_transfer_req_compl(struct ufs_hba *hba,
 
 				result = (DID_REQUEUE << 16);
 				requeued_reqs |= (1UL << index);
-			} else if (ocs_err_status & 0xC0000000) {
+			} else if (ocs_err_status) {
 				result = (DID_FATAL << 16);
 			} else {
 				result = ufshcd_transfer_rsp_status(hba, lrbp, index);
@@ -5740,6 +5900,12 @@ static int __ufshcd_transfer_req_compl(struct ufs_hba *hba,
 			}
 #endif
 			lrbp->complete_time_stamp = sched_clock();
+#ifdef OPLUS_FEATURE_MIDAS
+//Jinghua.Yu@BSP.Storage.UFS 2020/06/12, Add t for ufs transmission_status for midas
+			if (hba->ufs_transmission_status.transmission_status_enable) {
+				ufshcd_lrb_scsicmd_time_statistics(hba, lrbp);
+			}
+#endif
 			ufshcd_complete_lrbp_crypto(hba, cmd, lrbp);
 			/* Mark completed command as NULL in LRB */
 			lrbp->cmd = NULL;
@@ -5747,11 +5913,33 @@ static int __ufshcd_transfer_req_compl(struct ufs_hba *hba,
 
 			/* Do not touch lrbp after scsi done */
 			ufs_mtk_biolog_scsi_done_start(index); /* MTK PATCH */
+#if defined(VENDOR_EDIT) && defined(CONFIG_TRACEPOINTS)
+			if (trace_ufshcd_command_enabled())
+			{
+				struct request *req = cmd->request;
+				u_int64_t delta_us = ktime_us_delta(lrbp->complete_time_stamp, lrbp->issue_time_stamp);
+
+				if (req && bio_has_data(req->bio) && (delta_us > 5000))
+				{
+					trace_printk("ufs_io_latency:%06lld us, io_type:%s, LBA:%08x, size:%d\n",
+							delta_us, (rq_data_dir(req) == READ) ? "R" : "W",
+							(unsigned int)req->bio->bi_iter.bi_sector,
+							cmd->sdb.length);
+				}
+			}
+#endif
 			cmd->scsi_done(cmd);
 			__ufshcd_release(hba);
 			ufs_mtk_biolog_scsi_done_end(index); /* MTK PATCH */
 		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
 			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
+#ifdef OPLUS_FEATURE_MIDAS
+			lrbp->complete_time_stamp = sched_clock();
+//Jinghua.Yu@BSP.Storage.UFS 2020/06/12, Add t for ufs transmission_status for midas
+			if (hba->ufs_transmission_status.transmission_status_enable) {
+				ufshcd_lrb_devcmd_time_statistics(hba, lrbp);
+			}
+#endif
 			if (hba->dev_cmd.complete) {
 				/* MTK PATCH */
 				ufshcd_cond_add_cmd_trace(hba, index,
@@ -6308,25 +6496,6 @@ skip_pending_xfer_clear:
 					__func__);
 			hba->ufshcd_state = UFSHCD_STATE_ERROR;
 		}
-
-		/* Check again if need reset host */
-		if (!err && hba->invalid_resp_upiu) {
-			spin_unlock_irqrestore(hba->host->host_lock, flags);
-
-			ufs_mtk_pltfrm_host_sw_rst(hba, SW_RST_TARGET_UFSHCI);
-			ufshcd_hba_enable(hba);
-			err = ufshcd_dme_set(hba,
-				UIC_ARG_MIB_SEL(VENDOR_UNIPROPOWERDOWNCONTROL,
-				0), 0);
-			if (err)
-				dev_info(hba->dev, "ir_hdlr: failed to clr unipro pdn ctrl\n");
-			ufshcd_set_link_active(hba);
-			ufshcd_make_hba_operational(hba);
-
-			spin_lock_irqsave(hba->host->host_lock, flags);
-			hba->invalid_resp_upiu = false;
-		}
-
 		/*
 		 * Inform scsi mid-layer that we did reset and allow to handle
 		 * Unit Attention properly.
@@ -6570,12 +6739,9 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
 			dev_err(hba->dev, "PA_INIT_ERROR (FATAL ERROR)\n");
 		if (test_bit(14, &reg_ul))
 			dev_err(hba->dev, "PA_ERROR_IND_RECEIVED\n");
-		if (test_bit(15, &reg_ul))
-			dev_err(hba->dev, "PA_INIT (3.0 FATAL ERROR)\n");
 	}
 #endif
-	if ((reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT_ERROR) ||
-		(reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT))
+	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
 		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
 	else if (hba->dev_quirks &
 		   UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
@@ -7752,6 +7918,12 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
 	int ret = 0;
 	struct scsi_device *sdev_rpmb;
 	struct scsi_device *sdev_boot;
+#ifdef VENDOR_EDIT
+//PSW.BSP.Storage.Ufs, 2018-12-19 add for ufs device in /proc/devinfo
+	static char temp_version[5] = {0};
+	static char vendor[9] = {0};
+	static char model[17] = {0};
+#endif
 
 	hba->sdev_ufs_device = __scsi_add_device(hba->host, 0, 0,
 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN), NULL);
@@ -7765,6 +7937,16 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
 	ufs_mtk_runtime_pm_init(hba->sdev_ufs_device);
 
 	scsi_device_put(hba->sdev_ufs_device);
+
+#ifdef VENDOR_EDIT
+//PSW.BSP.Storage.Ufs, 2018-12-19 add for ufs device in /proc/devinfo
+	strncpy(temp_version, hba->sdev_ufs_device->rev, 4);
+	strncpy(vendor, hba->sdev_ufs_device->vendor, 8);
+	strncpy(model, hba->sdev_ufs_device->model, 16);
+	register_device_proc("ufs_version", temp_version, vendor);
+	register_device_proc("ufs", model, vendor);
+	register_device_proc_for_ufsplus("ufsplus_status", &ufsplus_hpb_status,&ufsplus_tw_status);
+#endif
 
 	sdev_boot = __scsi_add_device(hba->host, 0, 0,
 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
@@ -8111,6 +8293,14 @@ static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
 		&hba->desc_size.geom_desc);
 	if (err)
 		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
+
+
+#ifdef VENDOR_EDIT
+	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
+	    &hba->desc_size.hlth_desc);
+	if (err)
+        hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_MAX_SIZE;
+#endif
 }
 
 static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
@@ -8121,6 +8311,9 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
 	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
 	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
 	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
+#ifdef VENDOR_EDIT
+	hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_MAX_SIZE;
+#endif
 }
 
 /**
@@ -9524,10 +9717,6 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
 	ufsf_hpb_resume(&hba->ufsf);
 	ufsf_tw_resume(&hba->ufsf);
 #endif
-#if defined(CONFIG_SCSI_SKHPB)
-	skhpb_resume(hba);
-#endif
-
 	/* MTK PATCH: Enable auto-hibern8 if resume is successful */
 	ufshcd_vops_auto_hibern8(hba, true);
 
@@ -9920,6 +10109,7 @@ void ufshcd_remove(struct ufs_hba *hba)
 #if defined(CONFIG_UFSFEATURE)
 	ufsf_hpb_release(&hba->ufsf);
 	ufsf_tw_release(&hba->ufsf);
+	remove_ufsplus_ctrl_proc();
 #endif
 #if defined(CONFIG_SCSI_SKHPB)
 	if (hba->card && hba->card->wmanufacturerid == UFS_VENDOR_SKHYNIX)
@@ -10009,6 +10199,102 @@ out_error:
 	return err;
 }
 EXPORT_SYMBOL(ufshcd_alloc_host);
+
+#ifdef VENDOR_EDIT
+#include <asm/unaligned.h>
+static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
+				  enum desc_idn desc_id,
+				  u8 desc_index,
+				  u8 param_offset,
+				  u8 *sysfs_buf,
+				  u8 param_size)
+{
+	u8 desc_buf[8] = {0};
+	int ret;
+
+	if (param_size > 8)
+		return -EINVAL;
+
+	ret = ufshcd_read_desc_param(hba, desc_id, desc_index,
+				param_offset, desc_buf, param_size);
+	if (ret)
+		return -EINVAL;
+	switch (param_size) {
+	case 1:
+		ret = sprintf(sysfs_buf, "0x%02X\n", *desc_buf);
+		break;
+	case 2:
+		ret = sprintf(sysfs_buf, "0x%04X\n",
+			get_unaligned_be16(desc_buf));
+		break;
+	case 4:
+		ret = sprintf(sysfs_buf, "0x%08X\n",
+			get_unaligned_be32(desc_buf));
+		break;
+	case 8:
+		ret = sprintf(sysfs_buf, "0x%016llX\n",
+			get_unaligned_be64(desc_buf));
+		break;
+	}
+
+	return ret;
+}
+
+#define UFS_DESC_PARAM(_name, _puname, _duname, _size)			\
+	static ssize_t _name##_show(struct device *dev, 			\
+		struct device_attribute *attr, char *buf)			\
+	{									\
+		struct ufs_hba *hba = dev_get_drvdata(dev); 		\
+		return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname, \
+			0, _duname##_DESC_PARAM##_puname, buf, _size);		\
+	}									\
+	static DEVICE_ATTR_RO(_name)
+
+#define UFS_HEALTH_DESC_PARAM(_name, _uname, _size)			\
+	UFS_DESC_PARAM(_name, _uname, HEALTH, _size)
+
+UFS_HEALTH_DESC_PARAM(len, _LEN, 1);
+UFS_HEALTH_DESC_PARAM(eol_info, _EOL_INFO, 1);
+UFS_HEALTH_DESC_PARAM(life_time_estimation_a, _LIFE_TIME_EST_A, 1);
+UFS_HEALTH_DESC_PARAM(life_time_estimation_b, _LIFE_TIME_EST_B, 1);
+
+static struct attribute *ufs_sysfs_health_descriptor[] = {
+	&dev_attr_len.attr,
+	&dev_attr_eol_info.attr,
+	&dev_attr_life_time_estimation_a.attr,
+	&dev_attr_life_time_estimation_b.attr,
+	NULL,
+};
+
+static const struct attribute_group ufs_sysfs_health_descriptor_group = {
+	.name = "health_descriptor",
+	.attrs = ufs_sysfs_health_descriptor,
+};
+
+#define UFS_POWER_DESC_PARAM(_name, _uname, _index)			\
+static ssize_t _name##_index##_show(struct device *dev,			\
+	struct device_attribute *attr, char *buf)			\
+{									\
+	struct ufs_hba *hba = dev_get_drvdata(dev);			\
+	return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_POWER, 0,	\
+		PWR_DESC##_uname##_0 + _index * 2, buf, 2);		\
+}									\
+static DEVICE_ATTR_RO(_name##_index)
+
+static const struct attribute_group *ufs_sysfs_groups[] = {
+	&ufs_sysfs_health_descriptor_group,
+	NULL,
+};
+
+void ufs_sysfs_add_nodes(struct device *dev)
+{
+	int ret;
+
+	ret = sysfs_create_groups(&dev->kobj, ufs_sysfs_groups);
+	if (ret)
+		dev_err(dev,"%s: sysfs groups creation failed (err = %d)\n", __func__, ret);
+}
+#endif
 
 /**
  * ufshcd_init - Driver initialization routine
@@ -10206,6 +10492,11 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
 	 */
 	ufshcd_set_ufs_dev_active(hba);
 
+#ifdef OPLUS_FEATURE_MIDAS
+//Jinghua.Yu@BSP.Storage.UFS 2020/06/12, Add t for ufs transmission_status for midas
+	ufshcd_transmission_status_init_sysfs(hba);
+#endif
+
 #if defined(CONFIG_UFSFEATURE)
 	ufsf_hpb_set_init_state(&hba->ufsf);
 	ufsf_tw_set_init_state(&hba->ufsf);
@@ -10217,6 +10508,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
 #endif
 	async_schedule(ufshcd_async_scan, hba);
 	ufshcd_add_sysfs_nodes(hba);
+#ifdef VENDOR_EDIT
+	ufs_sysfs_add_nodes(hba->dev);
+#endif
 
 	/*
 	 * MTK PATCH:

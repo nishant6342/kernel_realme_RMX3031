@@ -111,7 +111,13 @@ enum DISP_PMQOS_SLOT {
 #define DISP_SLOT_READ_DDIC_BASE (DISP_SLOT_TRIG_CNT + 0x4)
 #define DISP_SLOT_READ_DDIC_BASE_END		\
 	(DISP_SLOT_READ_DDIC_BASE + READ_DDIC_SLOT_NUM * 0x4)
+//#ifdef OPLUS_FEATURE_ONSCREENFINGERPRINT
+//#define DISP_SLOT_FP0_IDX (DISP_SLOT_OVL_STATUS + 0x4)
+//#define DISP_SLOT_FP1_IDX (DISP_SLOT_FP0_IDX + 0x4)
+//#define DISP_SLOT_CUR_USER_CMD_IDX (DISP_SLOT_FP1_IDX + 0x4)
+//#else
 #define DISP_SLOT_CUR_USER_CMD_IDX (DISP_SLOT_READ_DDIC_BASE_END + 0x4)
+//#endif
 #define DISP_SLOT_CUR_BL_IDX (DISP_SLOT_CUR_USER_CMD_IDX + 0x4)
 
 /* For Dynamic OVL feature */
@@ -603,8 +609,6 @@ struct mtk_cwb_info {
 
 	unsigned int buf_idx;
 	struct mtk_cwb_buffer_info buffer[2];
-	unsigned int copy_w;
-	unsigned int copy_h;
 
 	enum addon_scenario scn;
 	struct mtk_ddp_comp *comp;
@@ -691,14 +695,11 @@ struct mtk_drm_crtc {
 	atomic_t dc_main_path_commit_event;
 	struct task_struct *trigger_event_task;
 	struct task_struct *trigger_delay_task;
-	struct task_struct *trig_cmdq_task;
 	atomic_t trig_event_act;
 	atomic_t trig_delay_act;
 	atomic_t delayed_trig;
-	atomic_t cmdq_trig;
 	wait_queue_head_t trigger_delay;
 	wait_queue_head_t trigger_event;
-	wait_queue_head_t trigger_cmdq;
 
 	unsigned int avail_modes_num;
 	struct drm_display_mode *avail_modes;
@@ -726,7 +727,6 @@ struct mtk_drm_crtc {
 	atomic_t sf_pf_event;
 
 	/*capture write back ctx*/
-	struct mutex cwb_lock;
 	struct mtk_cwb_info *cwb_info;
 	struct task_struct *cwb_task;
 	wait_queue_head_t cwb_wq;
@@ -878,6 +878,13 @@ unsigned int mtk_drm_dump_wk_lock(struct mtk_drm_private *priv,
 char *mtk_crtc_index_spy(int crtc_index);
 bool mtk_drm_get_hdr_property(void);
 int mtk_drm_aod_setbacklight(struct drm_crtc *crtc, unsigned int level);
+
+//#ifdef OPLUS_BUG_STABILITY
+void mtk_drm_send_lcm_cmd_prepare(struct drm_crtc *crtc,
+	struct cmdq_pkt **cmdq_handle);
+void mtk_drm_send_lcm_cmd_flush(struct drm_crtc *crtc,
+	struct cmdq_pkt **cmdq_handle, bool sync);
+//#endif
 
 int mtk_drm_crtc_wait_blank(struct mtk_drm_crtc *mtk_crtc);
 void mtk_drm_crtc_init_para(struct drm_crtc *crtc);

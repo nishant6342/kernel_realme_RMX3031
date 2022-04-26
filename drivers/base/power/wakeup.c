@@ -21,6 +21,9 @@
 #include <trace/events/power.h>
 
 #include "power.h"
+#ifdef VENDOR_EDIT
+#include <soc/oppo/oppo_wakelock_profiler.h>
+#endif /* VENDOR_EDIT */
 
 #ifndef CONFIG_SUSPEND
 suspend_state_t pm_suspend_target_state;
@@ -582,6 +585,12 @@ static void wakeup_source_activate(struct wakeup_source *ws)
 			"unregistered wakeup source\n"))
 		return;
 
+	#ifdef VENDOR_EDIT
+	//Yunqing.Zeng@BSP.Power.Basic 2017/11/28 add for kernel wakelock time statistics
+	wakeup_get_start_time();
+	#endif /* VENDOR_EDIT */
+
+
 	ws->active = true;
 	ws->active_count++;
 	ws->last_time = ktime_get();
@@ -723,8 +732,13 @@ static void wakeup_source_deactivate(struct wakeup_source *ws)
 	trace_wakeup_source_deactivate(ws->name, cec);
 
 	split_counters(&cnt, &inpr);
-	if (!inpr && waitqueue_active(&wakeup_count_wait_queue))
+	if (!inpr && waitqueue_active(&wakeup_count_wait_queue)) {
+		#ifdef VENDOR_EDIT
+		//Yunqing.Zeng@BSP.Power.Basic 2017/11/28 add for kernel wakelock time statistics
+		wakeup_get_end_hold_time();
+        #endif /* VENDOR_EDIT */
 		wake_up(&wakeup_count_wait_queue);
+	}
 }
 
 /**
@@ -915,6 +929,37 @@ void pm_print_active_wakeup_sources(void)
 }
 EXPORT_SYMBOL_GPL(pm_print_active_wakeup_sources);
 
+#ifdef VENDOR_EDIT
+void get_ws_listhead(struct list_head **ws)
+{
+	if (ws)
+		*ws = &wakeup_sources;
+}
+
+void wakeup_srcu_read_lock(int *srcuidx)
+{
+	*srcuidx = srcu_read_lock(&wakeup_srcu);
+}
+
+void wakeup_srcu_read_unlock(int srcuidx)
+{
+	srcu_read_unlock(&wakeup_srcu, srcuidx);
+}
+
+inline bool ws_all_release(void)
+{
+	unsigned int cnt, inpr;
+	split_counters(&cnt, &inpr);
+	if(!inpr && waitqueue_active(&wakeup_count_wait_queue)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+#endif
+
+
+
 /**
  * pm_wakeup_pending - Check if power transition in progress should be aborted.
  *
@@ -928,6 +973,7 @@ bool pm_wakeup_pending(void)
 	unsigned long flags;
 	bool ret = false;
 	char suspend_abort[MAX_SUSPEND_ABORT_LEN];
+	int counter;
 
 	spin_lock_irqsave(&events_lock, flags);
 	if (events_check_enabled) {
@@ -939,14 +985,15 @@ bool pm_wakeup_pending(void)
 	}
 	spin_unlock_irqrestore(&events_lock, flags);
 
-	if (ret) {
+	counter = atomic_read(&pm_abort_suspend);
+	if (ret || counter) {
 		pm_get_active_wakeup_sources(suspend_abort,
 					     MAX_SUSPEND_ABORT_LEN);
 		log_suspend_abort_reason(suspend_abort);
 		pr_info("PM: %s\n", suspend_abort);
 	}
 
-	return ret || atomic_read(&pm_abort_suspend) > 0;
+	return ret || counter;
 }
 
 void pm_system_wakeup(void)
@@ -1047,6 +1094,8 @@ bool pm_save_wakeup_count(unsigned int count)
 		events_check_enabled = true;
 	}
 	spin_unlock_irqrestore(&events_lock, flags);
+	if (!events_check_enabled)
+		pm_print_active_wakeup_sources();
 	return events_check_enabled;
 }
 
@@ -1172,4 +1221,7 @@ static int __init wakeup_sources_debugfs_init(void)
 	return 0;
 }
 
+
+
 postcore_initcall(wakeup_sources_debugfs_init);
+

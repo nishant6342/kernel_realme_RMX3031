@@ -80,7 +80,9 @@ struct md_sleep_status {
 
 #define PCM_32K_TICKS_PER_SEC		(32768)
 #define PCM_TICK_TO_SEC(TICK)	(TICK / PCM_32K_TICKS_PER_SEC)
-
+#ifdef VENDOR_EDIT
+#define PCM_TICK_TO_MILLI_SEC(TICK)	((TICK) * (1000) / (PCM_32K_TICKS_PER_SEC))
+#endif
 extern void mtk_suspend_gpio_dbg(void);
 extern void mtk_suspend_clk_dbg(void);
 extern u32 mt_irq_get_pending(unsigned int irq);

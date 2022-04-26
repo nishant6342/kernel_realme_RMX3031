@@ -16,6 +16,10 @@
 
 /* @ the same as camera_custom_errocode.h */
 enum CUSTOM_CAMERA_ERROR_CODE_ENUM {
+	#ifdef VENDOR_EDIT
+	/* Ze.Pang@Camera.Drv, Add for hal can't  detect when read sensor ID fail 20191008*/
+	ERROR_SENSORID_READ_FAIL = -1,
+	#endif
 	ERROR_NONE = 0,
 	ERROR_MSDK_IS_ACTIVATED,
 	ERROR_INVALID_DRIVER_MOD_ID,

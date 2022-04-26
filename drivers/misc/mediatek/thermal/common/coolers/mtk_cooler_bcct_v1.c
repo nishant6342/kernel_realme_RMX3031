@@ -370,6 +370,8 @@ static void chrlmt_set_limit_handler(struct work_struct *work)
 
 #if (CONFIG_MTK_GAUGE_VERSION == 30)
 		/* idx: 0 for main charger*/
+#ifndef OPLUS_FEATURE_CHG_BASIC
+/* OuYangBaiLi@BSP.CHG.Basic,charging_bsp 2021/04/23 */
 		charger_manager_set_input_current_limit(pthermal_consumer, 0,
 				((chrlmt_chr_input_curr_limit != -1) ?
 				chrlmt_chr_input_curr_limit * 1000 : -1));
@@ -387,6 +389,7 @@ static void chrlmt_set_limit_handler(struct work_struct *work)
 			charger_manager_enable_high_voltage_charging(
 						pthermal_consumer, true);
 
+#endif
 #else
 #ifdef CONFIG_MTK_SWITCH_INPUT_OUTPUT_CURRENT_SUPPORT
 		set_chr_input_current_limit(chrlmt_chr_input_curr_limit);

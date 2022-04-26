@@ -22,7 +22,6 @@
  *
  *
  * Original version/author:
- *      CVSROOT=:pserver:anonymous@198.186.203.37:/cvsroot/linux-parisc
  *      cvs -z3 co linux/arch/parisc/kernel/dma-rm.c
  *
  *	(C) Copyright 2000 Philipp Rumpf <prumpf@tux.org>

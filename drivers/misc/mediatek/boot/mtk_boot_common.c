@@ -221,6 +221,35 @@ static const struct file_operations boot_fops = {
 	.unlocked_ioctl = NULL
 };
 
+#ifdef OPLUS_BUG_STABILITY
+static struct kobject *systeminfo_kobj;
+static ssize_t ftmmode_show(struct kobject *kobj, struct kobj_attribute *attr,
+				char *buf)
+{
+	if (oppo_boot_mode == OPPO_SILENCE_BOOT)
+		return sprintf(buf, "%d\n", SILENCE_BOOT);
+	else if (oppo_boot_mode == OPPO_SAFE_BOOT)
+		return sprintf(buf, "%d\n", SAFE_BOOT);
+	else if (oppo_boot_mode == OPPO_AGING_BOOT)
+		return sprintf(buf, "%d\n", AGING_BOOT);
+	else
+		return sprintf(buf, "%d\n", get_boot_mode());
+}
+
+struct kobj_attribute ftmmode_attr = {
+	.attr = {"ftmmode", 0444},
+
+	.show = &ftmmode_show,
+};
+static struct attribute * g[] = {
+	&ftmmode_attr.attr,
+	NULL,
+};
+
+static struct attribute_group attr_group = {
+	.attrs = g,
+};
+#endif /* OPLUS_BUG_STABILITY */
 /* boot device class */
 static struct class *boot_class;
 static struct device *boot_device;
@@ -265,6 +294,12 @@ static int __init create_sysfs(void)
 		return ret;
 	}
 
+#ifdef OPLUS_BUG_STABILITY
+	systeminfo_kobj = kobject_create_and_add("systeminfo", NULL);
+	printk("oppo create systeminto node suscess!\n");
+	if (systeminfo_kobj)
+		ret = sysfs_create_group(systeminfo_kobj, &attr_group);
+#endif /* OPLUS_BUG_STABILITY */
 	return 0;
 }
 
@@ -299,6 +334,49 @@ static int boot_mode_proc_show(struct seq_file *p, void *v)
 
 	return 0;
 }
+
+#ifdef OPLUS_BUG_STABILITY
+OPPO_BOOTMODE oppo_boot_mode = OPPO_NORMAL_BOOT;
+static int oppo_get_boot_mode(char *oppo_boot_mode_char)
+{
+	int  boot_mode_temp = 0;
+	sscanf(oppo_boot_mode_char, "%d", &boot_mode_temp);
+	if(boot_mode_temp == 0)
+	{
+		oppo_boot_mode = OPPO_NORMAL_BOOT;
+	}
+	else if (boot_mode_temp == 1)
+	{
+		oppo_boot_mode = OPPO_SILENCE_BOOT;
+	}
+	else if (boot_mode_temp == 2)
+	{
+		oppo_boot_mode = OPPO_SAFE_BOOT;
+	}
+	else if (boot_mode_temp == 3)
+	{
+		oppo_boot_mode = OPPO_AGING_BOOT;
+	}
+	else
+	{
+		oppo_boot_mode = OPPO_UNKNOWN_BOOT;
+	}
+    pr_err("oppo_boot_mode: %d ",oppo_boot_mode);
+
+     return 1;
+}
+__setup("oppo_boot_mode=", oppo_get_boot_mode);
+
+unsigned int get_oppo_boot_mode(void)
+{
+	if (atomic_read(&g_boot_init) != BM_INITIALIZED) {
+		pr_warn("fail, %s (%d) state(%d,%d)\n", __func__, __LINE__,
+			atomic_read(&g_boot_init), oppo_boot_mode);
+	}
+	return oppo_boot_mode;
+}
+EXPORT_SYMBOL(get_oppo_boot_mode);
+#endif /* OPLUS_BUG_STABILITY */
 
 static int boot_mode_proc_open(struct inode *inode, struct file *file)
 {

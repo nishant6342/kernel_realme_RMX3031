@@ -252,6 +252,9 @@ struct ufs_desc_size {
 	int interc_desc;
 	int unit_desc;
 	int conf_desc;
+#ifdef VENDOR_EDIT
+	int hlth_desc;
+#endif
 };
 
 /**
@@ -599,6 +602,35 @@ enum ufs_crypto_state {
 	UFS_CRYPTO_HW_FBE             = (1 << 2),
 	UFS_CRYPTO_HW_FBE_ENCRYPTED   = (1 << 3),
 };
+
+#ifdef OPLUS_FEATURE_MIDAS
+//Jinghua.Yu@BSP.Storage.UFS 2020/06/12, Add t for ufs transmission_status for midas
+struct ufs_transmission_status_t
+{
+	u8  transmission_status_enable;
+
+	u64 gear_min_write_sec;
+	u64 gear_max_write_sec;
+	u64 gear_min_read_sec;
+	u64 gear_max_read_sec;
+
+	u64 gear_min_write_us;
+	u64 gear_max_write_us;
+	u64 gear_min_read_us;
+	u64 gear_max_read_us;
+
+	u64 gear_min_dev_us;
+	u64 gear_max_dev_us;
+
+	u64 gear_min_other_sec;
+	u64 gear_max_other_sec;
+	u64 gear_min_other_us;
+	u64 gear_max_other_us;
+
+	u64 scsi_send_count;
+	u64 dev_cmd_count;
+};
+#endif /*OPLUS_FEATURE_MIDAS*/
 
 /**
  * struct ufs_hba - per adapter private structure
@@ -960,6 +992,11 @@ struct ufs_hba {
 	void *crypto_DO_NOT_USE[8];
 #endif /* CONFIG_SCSI_UFS_CRYPTO */
 
+#ifdef OPLUS_FEATURE_MIDAS
+//Jinghua.Yu@BSP.Storage.UFS 2020/06/12, Add t for ufs transmission_status for midas
+	struct ufs_transmission_status_t ufs_transmission_status;
+	struct device_attribute ufs_transmission_status_attr;
+#endif
 	u32 ufs_mtk_qcmd_r_cmd_cnt;
 	u32 ufs_mtk_qcmd_w_cmd_cnt;
 };

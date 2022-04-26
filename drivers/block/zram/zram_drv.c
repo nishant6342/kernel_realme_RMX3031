@@ -1375,7 +1375,11 @@ compress_again:
 		atomic64_inc(&zram->stats.writestall);
 		handle = zs_malloc(zram->mem_pool, comp_len,
 				GFP_NOIO | __GFP_HIGHMEM |
+#ifdef OPLUS_FEATURE_PERFORMANCE
+                __GFP_MOVABLE | GFP_ATOMIC);
+#else
 				__GFP_MOVABLE);
+#endif
 		if (handle)
 			goto compress_again;
 		return -ENOMEM;

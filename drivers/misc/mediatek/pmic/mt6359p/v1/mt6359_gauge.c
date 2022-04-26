@@ -1869,13 +1869,11 @@ static void fgauge_set_nafg_intr_internal(int _prd, int _zcv_mv, int _thr_mv)
 
 	_zcv_reg = MV_to_REG_value(_zcv_mv);
 	_thr_reg = MV_to_REG_value(_thr_mv);
-
 	if (_thr_reg >= 32768) {
 		bm_err("[%s]nag_c_dltv_thr mv=%d ,thr_reg=%d,limit thr_reg to 32767\n",
 			__func__, _thr_mv, _thr_reg);
 		_thr_reg = 32767;
 	}
-
 	NAG_C_DLTV_Threashold_26_16 = (_thr_reg & 0xffff0000) >> 16;
 	NAG_C_DLTV_Threashold_15_0 = (_thr_reg & 0x0000ffff);
 

@@ -451,7 +451,13 @@ void ion_sec_heap_dump_info(void)
 			     "client", "dbg_name", "pid", "size", "address");
 	ION_DUMP(NULL, "%s\n", seq_line);
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	if (!down_read_trylock(&dev->client_lock)) {
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	if (!down_read_trylock(&dev->lock)) {
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 		ION_DUMP(
 			 NULL,
 			 "detail trylock fail, alloc pid(%d-%d)\n",
@@ -499,7 +505,13 @@ void ion_sec_heap_dump_info(void)
 	}
 
 	if (need_dev_lock)
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+		up_read(&dev->client_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 		up_read(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 
 	ION_DUMP(NULL, "%s\n", seq_line);
 	ION_DUMP(
@@ -687,7 +699,13 @@ static int ion_sec_heap_debug_show(
 	ION_DUMP(s, "%16s %16zu\n", "2d-fr-sz:", fr_size);
 	ION_DUMP(s, "%s\n", seq_line);
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	down_read(&dev->client_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	down_read(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 	for (n = rb_first(&dev->clients); n; n = rb_next(n)) {
 		struct ion_client
 		*client = rb_entry(n, struct ion_client, node);
@@ -732,7 +750,13 @@ static int ion_sec_heap_debug_show(
 			mutex_unlock(&client->lock);
 		}
 	}
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	up_read(&dev->client_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	up_read(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 
 	return 0;
 }

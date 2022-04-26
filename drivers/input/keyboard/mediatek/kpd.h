@@ -48,6 +48,10 @@ struct keypad_dts_data {
 	u32 kpd_hw_dl_key3;
 	u32 kpd_hw_recovery_key;
 	u32 kpd_hw_factory_key;
+	#ifdef CONFIG_MACH_MT6785
+	/* Yonghai.Wang@BSP.TP.Misc 2020/9/17 modified for HW reset distinguish 1878 1879 and 1877. */
+	int cphy_dphy_gpio;
+	#endif
 };
 
 extern struct keypad_dts_data kpd_dts_data;
@@ -55,11 +59,12 @@ extern int kpd_klog_en;
 #ifdef CONFIG_LONG_PRESS_MODE_EN
 extern atomic_t vol_down_long_press_flag;
 #endif
+#define KPD_NO 0
 
 #define KPD_DEBUG	1
 #define SET_KPD_KCOL		_IO('k', 29)
 #define KPD_SAY		"kpd: "
-
+#define KPD_AUTOTEST	KPD_NO
 #if KPD_DEBUG
 #define kpd_print(fmt, arg...)	do { \
 	if (kpd_klog_en) \

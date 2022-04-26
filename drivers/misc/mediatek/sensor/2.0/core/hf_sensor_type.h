@@ -14,6 +14,8 @@
 #ifndef _HF_SENSOR_TYPE_H_
 #define _HF_SENSOR_TYPE_H_
 
+//Just for compatible of multi platform in sensor_definfo.h for rgb/rear_als/flicker type
+#define OPLUS_CCT_SENSOR_TYPE_SUPPORT
 enum {
 	/* follow google default sensor type */
 	SENSOR_TYPE_ACCELEROMETER = 1,
@@ -73,7 +75,23 @@ enum {
 	SENSOR_TYPE_SAR,
 	SENSOR_TYPE_OIS,
 	SENSOR_TYPE_GYRO_SECONDARY,
+#ifdef OPLUS_FEATURE_SENSOR_ALGORITHM
+//Chao.Zeng@PSW.BSP.Sensor add for ai shutter 2020/9/28
+	SENSOR_TYPE_AI_SHUTTER,
+#endif
+#ifdef OPLUS_FEATURE_SENSOR_ALGORITHM
+	//SENSOR_TYPE_SENSOR_MAX,
+	OPLUS_VIRTAUL_SENSOR_START = 76,
+#ifdef OPLUS_FEATURE_SENSOR
+//Chendai.Liang@BSP.Sensor add for oplus cct support
+	SENSOR_TYPE_REAR_ALS = 98,
+	SENSOR_TYPE_CCT = 99,
+	SENSOR_TYPE_FLICKER = 100,
 	SENSOR_TYPE_SENSOR_MAX,
+#endif /*OPLUS_FEATURE_SENSOR*/
+#else
+	SENSOR_TYPE_SENSOR_MAX,
+#endif /*OPLUS_FEATURE_SENSOR_ALGORITHM*/
 };
 
 enum {
@@ -137,7 +155,24 @@ enum {
 	ID_SAR,
 	ID_OIS,
 	ID_GYRO_SECONDARY,
+#ifdef OPLUS_FEATURE_SENSOR_ALGORITHM
+//Chao.Zeng@PSW.BSP.Sensor add for ai shutter 2020/9/28
+	ID_AI_SHUTTER,
+#endif
+#ifdef OPLUS_FEATURE_SENSOR_ALGORITHM
+/* end sensor type */
+	//ID_SENSOR_MAX,
+	ID_OPLUS_VIRTUAL_SENSOR_START,
+#ifdef OPLUS_FEATURE_SENSOR
+//Chendai.Liang@BSP.Sensor add for oplus cct support
+	ID_REAR_ALS = SENSOR_TYPE_REAR_ALS - ID_OFFSET,
+	ID_CCT = SENSOR_TYPE_CCT - ID_OFFSET,
+	ID_FLICKER = SENSOR_TYPE_FLICKER - ID_OFFSET,
 	ID_SENSOR_MAX,
+#endif /*OPLUS_FEATURE_SENSOR*/
+#else
+	ID_SENSOR_MAX,
+#endif
 };
 
 enum {

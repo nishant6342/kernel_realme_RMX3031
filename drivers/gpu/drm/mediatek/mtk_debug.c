@@ -61,7 +61,6 @@
 #define SMI_LARB_VC_PRI_MODE (0x020)
 #define SMI_LARB_NON_SEC_CON(port) (0x380 + 4 * (port))
 #define GET_M4U_PORT 0x1F
-#define MTK_CWB_NO_EFFECT_HRT_MAX_WIDTH 128
 
 #if IS_ENABLED(CONFIG_DEBUG_FS)
 static struct dentry *mtkfb_dbgfs;
@@ -90,8 +89,6 @@ u64 vfp_backup;
 
 static atomic_t lfr_dbg;
 static atomic_t lfr_params;
-
-static struct completion cwb_cmp;
 
 struct logger_buffer {
 	char **buffer_ptr;
@@ -405,10 +402,17 @@ void mtk_disp_mipi_ccci_callback(unsigned int en, unsigned int usrdata)
 }
 EXPORT_SYMBOL(mtk_disp_mipi_ccci_callback);
 
+/*#ifdef OPLUS_BUG_STABILITY*/
+/*Yaqiang.Shi@RM.MM.Display.LCD.Driver, add for change to 120Hz while do osc change*/
+extern bool osc_flag;
+/*#endif*/
 void mtk_disp_osc_ccci_callback(unsigned int en, unsigned int usrdata)
 {
 	struct drm_crtc *crtc;
-
+	/*#ifdef OPLUS_BUG_STABILITY*/
+	/*Yaqiang.Shi@RM.MM.Display.LCD.Driver, add for kernel trigger repaint*/
+	int i = 0;
+	/*#endif*/
 	crtc = list_first_entry(&(drm_dev)->mode_config.crtc_list,
 				typeof(*crtc), head);
 
@@ -418,6 +422,15 @@ void mtk_disp_osc_ccci_callback(unsigned int en, unsigned int usrdata)
 	}
 	mtk_crtc_osc_freq_switch(crtc, en, usrdata);
 
+	/*#ifdef OPLUS_BUG_STABILITY*/
+	/*Yaqiang.Shi@RM.MM.Display.LCD.Driver, add for kernel trigger repaint*/
+	for (i = 0; i < 25; i++) {
+		drm_trigger_repaint(DRM_REPAINT_FOR_IDLE, crtc->dev);
+		msleep(8);
+	}
+	msleep(500);
+	osc_flag = 0;
+	/*#endif*/
 	return;
 }
 EXPORT_SYMBOL(mtk_disp_osc_ccci_callback);
@@ -1235,9 +1248,8 @@ int mtk_dprec_mmp_dump_cwb_buffer(struct drm_crtc *crtc,
 static void user_copy_done_function(void *buffer,
 	enum CWB_BUFFER_TYPE type)
 {
-	DDPMSG("[capture] I get buffer:0x%x, type:%d\n",
+	DDPINFO("[capture] I get buffer:0x%x, type:%d\n",
 			buffer, type);
-	complete(&cwb_cmp);
 }
 
 static const struct mtk_cwb_funcs user_cwb_funcs = {
@@ -1272,18 +1284,16 @@ static void mtk_drm_cwb_info_init(struct drm_crtc *crtc)
 
 	if (!cwb_info->buffer[0].dst_roi.width ||
 		!cwb_info->buffer[0].dst_roi.height) {
-		mtk_rect_make(&cwb_info->buffer[0].dst_roi, 0, 0,
-			MTK_CWB_NO_EFFECT_HRT_MAX_WIDTH,
-			MTK_CWB_NO_EFFECT_HRT_MAX_WIDTH);
-		mtk_rect_make(&cwb_info->buffer[1].dst_roi, 0, 0,
-			MTK_CWB_NO_EFFECT_HRT_MAX_WIDTH,
-			MTK_CWB_NO_EFFECT_HRT_MAX_WIDTH);
+		mtk_rect_make(&cwb_info->buffer[0].dst_roi,
+				0, 0, 128, 128);
+		mtk_rect_make(&cwb_info->buffer[1].dst_roi,
+				0, 0, 128, 128);
 	}
 
 	/*alloc && config two fb*/
 	if (!cwb_info->buffer[0].fb) {
-		mode.width = MTK_CWB_NO_EFFECT_HRT_MAX_WIDTH;
-		mode.height = cwb_info->src_roi.height;
+		mode.width = cwb_info->buffer[0].dst_roi.width;
+		mode.height = cwb_info->buffer[0].dst_roi.height;
 		mode.pixel_format = DRM_FORMAT_RGB888;
 		mode.pitches[0] = mode.width * 3;
 
@@ -1346,10 +1356,6 @@ bool mtk_drm_cwb_enable(int en,
 	}
 
 	cwb_info = mtk_crtc->cwb_info;
-	if (cwb_info->enable == en) {
-		DDPMSG("[capture] en:%d already effective\n", en);
-		return true;
-	}
 	cwb_info->funcs = funcs;
 	cwb_info->type = type;
 
@@ -1369,6 +1375,7 @@ bool mtk_drm_set_cwb_roi(struct mtk_rect rect)
 	struct drm_crtc *crtc;
 	struct mtk_drm_crtc *mtk_crtc;
 	struct mtk_cwb_info *cwb_info;
+	int old_width, old_height;
 	struct mtk_drm_gem_obj *mtk_gem;
 	struct drm_mode_fb_cmd2 mode = {0};
 
@@ -1392,55 +1399,34 @@ bool mtk_drm_set_cwb_roi(struct mtk_rect rect)
 		return false;
 	}
 	cwb_info = mtk_crtc->cwb_info;
-	cwb_info->src_roi.width =
-				crtc->state->adjusted_mode.hdisplay;
-	cwb_info->src_roi.height =
-				crtc->state->adjusted_mode.vdisplay;
 
-	if (rect.x >= cwb_info->src_roi.width ||
-		rect.y >= cwb_info->src_roi.height ||
-		!rect.width || !rect.height) {
-		DDP_MUTEX_UNLOCK(&mtk_crtc->lock, __func__, __LINE__);
-		return false;
-	}
-
-	if (rect.width > MTK_CWB_NO_EFFECT_HRT_MAX_WIDTH)
-		rect.width = MTK_CWB_NO_EFFECT_HRT_MAX_WIDTH;
+	if (!rect.width || !rect.height) {
+		rect.x = 0;
+		rect.y = 0;
+		rect.width = 128;
+		rect.height = 128;
+	} else if (rect.width > 128)
+		rect.width = 128;
 
 	if (rect.x + rect.width > cwb_info->src_roi.width)
 		rect.width = cwb_info->src_roi.width - rect.x;
 	if (rect.y + rect.height > cwb_info->src_roi.height)
 		rect.height = cwb_info->src_roi.height - rect.y;
 
-	if (!cwb_info->buffer[0].fb) {
-		mode.width = MTK_CWB_NO_EFFECT_HRT_MAX_WIDTH;
-		mode.height = cwb_info->src_roi.height;
-		mode.pixel_format = DRM_FORMAT_RGB888;
-		mode.pitches[0] = mode.width * 3;
-
-		mtk_gem = mtk_drm_gem_create(
-			crtc->dev, mode.width * mode.height * 3, true);
-		cwb_info->buffer[0].addr_mva = (u32)mtk_gem->dma_addr;
-		cwb_info->buffer[0].addr_va = (u64)mtk_gem->kvaddr;
-
-		cwb_info->buffer[0].fb  =
-			mtk_drm_framebuffer_create(
-			crtc->dev, &mode, &mtk_gem->base);
-		DDPMSG("[capture] b[0].addr_mva:0x%x, addr_va:0x%llx\n",
-				cwb_info->buffer[0].addr_mva,
-				cwb_info->buffer[0].addr_va);
-
-		mtk_gem = mtk_drm_gem_create(
-			crtc->dev, mode.width * mode.height * 3, true);
-		cwb_info->buffer[1].addr_mva = (u32)mtk_gem->dma_addr;
-		cwb_info->buffer[1].addr_va = (u64)mtk_gem->kvaddr;
-
-		cwb_info->buffer[1].fb  =
-			mtk_drm_framebuffer_create(
-			crtc->dev, &mode, &mtk_gem->base);
-		DDPMSG("[capture] b[1].addr_mva:0x%x, addr_va:0x%llx\n",
-				cwb_info->buffer[1].addr_mva,
-				cwb_info->buffer[1].addr_va);
+	if (cwb_info->buffer[0].fb) {
+		old_width = cwb_info->buffer[0].fb->width;
+		old_height = cwb_info->buffer[0].fb->height;
+		if (old_width == rect.width && old_height == rect.height) {
+			mtk_rect_make(&cwb_info->buffer[0].dst_roi,
+			rect.x, rect.y, rect.width, rect.height);
+			mtk_rect_make(&cwb_info->buffer[1].dst_roi,
+				rect.x, rect.y, rect.width, rect.height);
+			DDP_MUTEX_UNLOCK(&mtk_crtc->lock, __func__, __LINE__);
+			return true;
+		}
+		/* free old*/
+		drm_framebuffer_put(cwb_info->buffer[0].fb);
+		drm_framebuffer_put(cwb_info->buffer[1].fb);
 	}
 
 	/* update roi */
@@ -1449,43 +1435,37 @@ bool mtk_drm_set_cwb_roi(struct mtk_rect rect)
 	mtk_rect_make(&cwb_info->buffer[1].dst_roi,
 		rect.x, rect.y, rect.width, rect.height);
 
-	DDPMSG("[capture] change roi:(%d,%d,%d,%d)\n",
-		cwb_info->buffer[0].dst_roi.x,
-		cwb_info->buffer[0].dst_roi.y,
-		cwb_info->buffer[0].dst_roi.width,
-		cwb_info->buffer[0].dst_roi.height);
+	/* create new */
+	mode.width = rect.width;
+	mode.height = rect.height;
+	mode.pixel_format = DRM_FORMAT_RGB888;
+	mode.pitches[0] = mode.width * 3;
+
+	mtk_gem = mtk_drm_gem_create(
+		crtc->dev, mode.width * mode.height * 3, true);
+	cwb_info->buffer[0].addr_mva = (u32)mtk_gem->dma_addr;
+	cwb_info->buffer[0].addr_va = (u64)mtk_gem->kvaddr;
+	cwb_info->buffer[0].fb =
+		mtk_drm_framebuffer_create(
+		crtc->dev, &mode, &mtk_gem->base);
+	DDPMSG("[capture] b[0].addr_mva:0x%x, addr_va:0x%llx\n",
+			cwb_info->buffer[0].addr_mva,
+			cwb_info->buffer[0].addr_va);
+
+	mtk_gem = mtk_drm_gem_create(
+		crtc->dev, mode.width * mode.height * 3, true);
+	cwb_info->buffer[1].addr_mva = (u32)mtk_gem->dma_addr;
+	cwb_info->buffer[1].addr_va = (u64)mtk_gem->kvaddr;
+	cwb_info->buffer[1].fb =
+		mtk_drm_framebuffer_create(
+		crtc->dev, &mode, &mtk_gem->base);
+	DDPMSG("[capture] b[1].addr_mva:0x%x, addr_va:0x%llx\n",
+			cwb_info->buffer[1].addr_mva,
+			cwb_info->buffer[1].addr_va);
 
 	DDP_MUTEX_UNLOCK(&mtk_crtc->lock, __func__, __LINE__);
 	return true;
 
-}
-
-void mtk_drm_cwb_backup_copy_size(void)
-{
-	struct drm_crtc *crtc;
-	struct mtk_drm_crtc *mtk_crtc;
-	struct mtk_cwb_info *cwb_info;
-	struct mtk_ddp_comp *comp;
-
-	crtc = list_first_entry(&(drm_dev)->mode_config.crtc_list,
-				typeof(*crtc), head);
-	if (!crtc) {
-		DDPPR_ERR("find crtc fail\n");
-		return;
-	}
-	mtk_crtc = to_mtk_crtc(crtc);
-	cwb_info = mtk_crtc->cwb_info;
-
-	if (!cwb_info)
-		return;
-
-	if (!cwb_info->comp) {
-		DDPPR_ERR("[capture] cwb enable, but has not comp\n");
-		return;
-	}
-
-	comp = cwb_info->comp;
-	mtk_ddp_comp_io_cmd(comp, NULL, WDMA_READ_DST_SIZE, cwb_info);
 }
 
 bool mtk_drm_set_cwb_user_buf(void *user_buffer, enum CWB_BUFFER_TYPE type)
@@ -1507,10 +1487,8 @@ bool mtk_drm_set_cwb_user_buf(void *user_buffer, enum CWB_BUFFER_TYPE type)
 	if (!cwb_info)
 		return false;
 
-	DDP_MUTEX_LOCK(&mtk_crtc->cwb_lock, __func__, __LINE__);
 	cwb_info->type = type;
 	cwb_info->user_buffer = user_buffer;
-	DDP_MUTEX_UNLOCK(&mtk_crtc->cwb_lock, __func__, __LINE__);
 	DDPMSG("[capture] User set buffer:0x%x, type:%d\n",
 			user_buffer, type);
 
@@ -1846,6 +1824,21 @@ static void process_dbg_opt(const char *opt)
 
 		DDPINFO("mipi_ccci:%d\n", en);
 		mtk_disp_mipi_ccci_callback(en, 0);
+/*#ifdef OPLUS_BUG_STABILITY*/
+/*Yaqiang.Shi@RM.MM.Display.LCD.Stability, add for lcd osc hopping*/
+	} else if (!strncmp(opt, "osc_ccci:", 9)) {
+		unsigned int en, ret;
+
+		ret = sscanf(opt, "osc_ccci:%d\n", &en);
+                if (ret != 1) {
+                        DDPPR_ERR("%d error to parse cmd %s\n",
+                                __LINE__, opt);
+                        return;
+                }
+
+                DDPINFO("osc_ccci:%d\n", en);
+                mtk_disp_osc_ccci_callback(en, 0);
+/*#endif*/
 	} else if (strncmp(opt, "aal:", 4) == 0) {
 		disp_aal_debug(opt + 4);
 	} else if (strncmp(opt, "aee:", 4) == 0) {
@@ -2027,6 +2020,8 @@ static void process_dbg_opt(const char *opt)
 			display_enter_tui();
 		else
 			display_exit_tui();
+	} else if (strncmp(opt, "drm:", 4) == 0) {
+		disp_drm_debug(opt + 4);
 	} else if (strncmp(opt, "cwb_en:", 7) == 0) {
 		unsigned int ret, enable;
 
@@ -2080,7 +2075,7 @@ static void process_dbg_opt(const char *opt)
 		struct drm_crtc *crtc;
 		struct mtk_drm_crtc *mtk_crtc;
 		struct mtk_cwb_info *cwb_info;
-		int width, height, size, ret;
+		int width, height, size;
 
 		/* this debug cmd only for crtc0 */
 		crtc = list_first_entry(&(drm_dev)->mode_config.crtc_list,
@@ -2096,27 +2091,12 @@ static void process_dbg_opt(const char *opt)
 			return;
 
 		DDP_MUTEX_LOCK(&mtk_crtc->lock, __func__, __LINE__);
-		width = MTK_CWB_NO_EFFECT_HRT_MAX_WIDTH;
-		height = cwb_info->src_roi.height;
+		width = cwb_info->buffer[0].dst_roi.width;
+		height = cwb_info->buffer[0].dst_roi.height;
 		size = sizeof(u8) * width * height * 3;
 		user_buffer = kzalloc(size, GFP_KERNEL);
 		mtk_drm_set_cwb_user_buf((void *)user_buffer, IMAGE_ONLY);
 		DDP_MUTEX_UNLOCK(&mtk_crtc->lock, __func__, __LINE__);
-		DDPMSG("[capture] wait frame complete\n");
-		ret = wait_for_completion_interruptible_timeout(&cwb_cmp,
-			msecs_to_jiffies(3000));
-		if (ret > 0)
-			DDPMSG("[capture] frame complete done\n");
-		else {
-			DDPMSG("[capture] wait frame timeout(3s)\n");
-			DDP_MUTEX_LOCK(&mtk_crtc->lock, __func__, __LINE__);
-			mtk_drm_set_cwb_user_buf((void *)NULL, IMAGE_ONLY);
-			DDP_MUTEX_UNLOCK(&mtk_crtc->lock, __func__, __LINE__);
-		}
-		kfree(user_buffer);
-		reinit_completion(&cwb_cmp);
-	}  else if (strncmp(opt, "drm:", 4) == 0) {
-		disp_drm_debug(opt + 4);
 	}
 
 }
@@ -2438,7 +2418,6 @@ out:
 void disp_dbg_init(struct drm_device *dev)
 {
 	drm_dev = dev;
-	init_completion(&cwb_cmp);
 }
 
 void disp_dbg_deinit(void)
@@ -2478,3 +2457,12 @@ void get_disp_dbg_buffer(unsigned long *addr, unsigned long *size,
 		*start = 0;
 	}
 }
+
+//#ifdef VENDOR_EDIT
+struct drm_device *get_drm_device(){
+    return drm_dev;
+}
+EXPORT_SYMBOL(get_drm_device);
+//#endif
+
+

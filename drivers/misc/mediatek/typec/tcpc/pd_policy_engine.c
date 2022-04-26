@@ -1078,16 +1078,33 @@ enum PE_NEW_EVT_TYPE {
 	PE_NEW_EVT_PD = 1,
 	PE_NEW_EVT_VDM = 2,
 };
-
+#ifdef OPLUS_FEATURE_CHG_BASIC
+bool is_pe_sink_ready = false;
+void set_pe_sink_ready(bool state)
+{
+	is_pe_sink_ready = state;
+}
+bool get_pe_sink_ready(void)
+{
+	return is_pe_sink_ready;
+}
+EXPORT_SYMBOL(get_pe_sink_ready);
+#endif /* OPLUS_FEATURE_CHG_BASIC */
 static inline bool pd_try_get_vdm_event(
 	struct tcpc_device *tcpc_dev, struct pd_event *pd_event)
 {
 	bool ret = false;
 	struct pd_port *pd_port = &tcpc_dev->pd_port;
-
+	#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (pd_port->pe_pd_state != PE_SNK_READY)
+		set_pe_sink_ready(false);
+	#endif /* OPLUS_FEATURE_CHG_BASIC */
 	switch (pd_port->pe_pd_state) {
 #ifdef CONFIG_USB_PD_PE_SINK
 	case PE_SNK_READY:
+		#ifdef OPLUS_FEATURE_CHG_BASIC
+		set_pe_sink_ready(true);
+		#endif /* OPLUS_FEATURE_CHG_BASIC */
 		ret = pd_get_vdm_event(tcpc_dev, pd_event);
 		break;
 #endif	/* CONFIG_USB_PD_PE_SINK */

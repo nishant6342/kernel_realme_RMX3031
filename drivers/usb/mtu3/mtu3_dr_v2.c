@@ -287,6 +287,7 @@ void ssusb_gadget_disconnect(struct mtu3 *mtu)
 	usb_gadget_set_state(&mtu->g, USB_STATE_NOTATTACHED);
 }
 
+unsigned int usb_mode;
 static void ssusb_set_mode(struct work_struct *work)
 {
 	struct otg_switch_mtk *__otg_sx = container_of(to_delayed_work(work),
@@ -296,7 +297,6 @@ static void ssusb_set_mode(struct work_struct *work)
 		container_of(otg_sx, struct ssusb_mtk, otg_switch);
 	struct mtu3 *mtu = ssusb->u3d;
 	unsigned long flags;
-	unsigned int usb_mode;
 
 	spin_lock_irqsave(&otg_sx->dr_lock, flags);
 	usb_mode = __otg_sx->desire_usb_mode;

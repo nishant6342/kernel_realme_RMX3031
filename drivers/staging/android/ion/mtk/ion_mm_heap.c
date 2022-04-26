@@ -1302,7 +1302,13 @@ static int ion_mm_heap_debug_show(struct ion_heap *heap, struct seq_file *s,
 		 "----------------------------------------------------\n");
 
 	/* dump all handle's backtrace */
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	down_read(&dev->client_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	down_read(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 	for (n = rb_first(&dev->clients); n; n = rb_next(n)) {
 		struct ion_client
 		*client = rb_entry(n, struct ion_client, node);
@@ -1356,7 +1362,13 @@ static int ion_mm_heap_debug_show(struct ion_heap *heap, struct seq_file *s,
 #ifdef CONFIG_MTK_IOMMU_V2
 	mtk_iommu_log_dump(s);
 #endif
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	up_read(&dev->client_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	up_read(&dev->lock);
+#endif
 
 	return 0;
 }
@@ -1435,7 +1447,13 @@ void ion_mm_heap_memory_detail(void)
 		 "client", "dbg_name", "pid", "size", "address");
 	ION_DUMP(NULL, "--------------------------------------\n");
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	if (!down_read_trylock(&dev->client_lock)) {
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	if (!down_read_trylock(&dev->lock)) {
+#endif
 		ION_DUMP(NULL,
 			 "detail trylock fail, alloc pid(%d-%d)\n",
 				     caller_pid, caller_tid);
@@ -1488,7 +1506,13 @@ void ion_mm_heap_memory_detail(void)
 	ION_DUMP(NULL, "%s\n", seq_log);
 
 	if (need_dev_lock)
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+		up_read(&dev->client_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 		up_read(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 
 	ION_DUMP(NULL, "---------ion_mm_heap buffer info------\n");
 
@@ -1654,6 +1678,45 @@ size_t ion_mm_heap_total_memory(void)
 	return (size_t)(atomic64_read(&page_sz_cnt) * 4096);
 }
 
+#ifdef VENDOR_EDIT
+size_t get_ion_heap_by_pid(pid_t pid)
+{
+	struct ion_device *dev = g_ion_device;
+	struct rb_node *n, *m;
+	int buffer_size = 0;
+	unsigned int id = 0;
+	enum mtk_ion_heap_type cam_heap = ION_HEAP_TYPE_MULTIMEDIA_FOR_CAMERA;
+	enum mtk_ion_heap_type mm_heap = ION_HEAP_TYPE_MULTIMEDIA;
+
+	if (!down_read_trylock(&dev->lock))
+		return 0;
+	for (n = rb_first(&dev->clients); n; n = rb_next(n)) {
+		struct ion_client *client = rb_entry(n, struct ion_client, node);
+		if(client->pid == pid) {
+			mutex_lock(&client->lock);
+			for (m = rb_first(&client->handles); m;
+			     m = rb_next(m)) {
+				struct ion_handle *handle =
+				    rb_entry(m, struct ion_handle,
+					     node);
+				id = handle->buffer->heap->id;
+
+				if ((id == mm_heap || id == cam_heap) &&
+				    (handle->buffer->handle_count) != 0) {
+					buffer_size +=
+					    (int)(handle->buffer->size) /
+					    (handle->buffer->handle_count);
+				}
+			}
+			mutex_unlock(&client->lock);
+		}
+	}
+	up_read(&dev->lock);
+	return buffer_size/1024;
+}
+EXPORT_SYMBOL(get_ion_heap_by_pid);
+#endif
+
 struct ion_heap *ion_mm_heap_create(struct ion_platform_heap *unused)
 {
 	struct ion_system_heap *heap;
@@ -1685,6 +1748,13 @@ struct ion_heap *ion_mm_heap_create(struct ion_platform_heap *unused)
 		if (unused->id == ION_HEAP_TYPE_MULTIMEDIA_FOR_CAMERA)
 			gfp_flags |= __GFP_HIGHMEM;
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/*
+ *when alloc ion order <= 1, support direct_reclaim
+ */
+		if (orders[i] <= 1)
+			gfp_flags |= __GFP_DIRECT_RECLAIM;
+#endif
 		pool = ion_page_pool_create(gfp_flags, orders[i], false);
 		if (!pool)
 			goto err_create_pool;

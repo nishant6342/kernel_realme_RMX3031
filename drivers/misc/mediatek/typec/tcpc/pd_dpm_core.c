@@ -93,6 +93,13 @@ static const struct svdm_svid_ops svdm_svid_ops[] = {
 		.reset_state = dc_reset_state,
 	},
 #endif	/* CONFIG_USB_PD_ALT_MODE_RTDC */
+#ifdef OPLUS_FEATURE_CHG_BASIC
+/* huangtongfeng@bsp.driver.chg  for pd+svooc */
+	{
+		.name = "Oplus",
+		.svid = USB_VID_OPLUS,
+	},
+#endif
 };
 
 int dpm_check_supported_modes(void)
@@ -651,10 +658,12 @@ void pd_dpm_snk_standby_power(struct pd_port *pd_port)
 
 #ifdef CONFIG_USB_PD_VCONN_SAFE5V_ONLY
 	bool vconn_highv_prot;
+	struct tcpc_device *tcpc_dev = pd_port->tcpc_dev;
 	struct pe_data *pe_data = &pd_port->pe_data;
 
 	vconn_highv_prot = pd_port->request_v_new > 5000;
-	if (vconn_highv_prot != pe_data->vconn_highv_prot) {
+	if (vconn_highv_prot != pe_data->vconn_highv_prot &&
+		tcpc_dev->tcpc_flags & TCPC_FLAGS_VCONN_SAFE5V_ONLY) {
 		PE_INFO("VC_HIGHV_PROT: %d\r\n", vconn_highv_prot);
 
 		if (vconn_highv_prot)
@@ -1029,8 +1038,10 @@ void pd_dpm_ufp_request_id_info(struct pd_port *pd_port)
 void pd_dpm_ufp_request_svid_info(struct pd_port *pd_port)
 {
 	bool ack = false;
-
-	if (pd_is_support_modal_operation(pd_port))
+#ifdef OPLUS_FEATURE_CHG_BASIC
+/* huangtongfeng@bsp.driver.chg  for pd+svooc */
+	if (pd_port->svid_data_cnt > 0)
+#endif
 		ack = (dpm_vdm_get_svid(pd_port) == USB_SID_PD);
 
 	if (!ack) {
@@ -1186,10 +1197,8 @@ void pd_dpm_dfp_inform_id(struct pd_port *pd_port, bool ack)
 {
 	uint32_t *payload = pd_get_msg_vdm_data_payload(pd_port);
 
-	if (!payload) {
-		VDM_STATE_DPM_INFORMED(pd_port);
+	if (!payload)
 		return;
-	}
 
 	if (ack) {
 		DPM_DBG("InformID, 0x%02x, 0x%02x, 0x%02x, 0x%02x\r\n",
@@ -2151,6 +2160,11 @@ int pd_dpm_notify_pe_startup(struct pd_port *pd_port)
 #else
 	if (pd_port->dpm_caps & DPM_CAP_ATTEMP_DISCOVER_ID)
 		reactions |= DPM_REACTION_DISCOVER_ID;
+#ifdef OPLUS_FEATURE_CHG_BASIC
+/* huangtongfeng@bsp.driver.chg  for pd+svooc */
+	if (pd_port->dpm_caps & DPM_CAP_ATTEMP_DISCOVER_SVID)
+		reactions |= DPM_REACTION_DISCOVER_SVID;
+#endif
 #endif	/* CONFIG_USB_PD_ATTEMP_ENTER_MODE */
 
 #ifdef CONFIG_USB_PD_REV30

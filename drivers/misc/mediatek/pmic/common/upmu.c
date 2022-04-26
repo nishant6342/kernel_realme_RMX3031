@@ -182,8 +182,12 @@ unsigned short pmic_set_register_value(PMU_FLAGS_LIST_ENUM flagname,
 	ret = pmic_config_interface((unsigned int)(pFlag->offset), val,
 		(unsigned int)(pFlag->mask), (unsigned int)(pFlag->shift));
 	if (ret != 0) {
+//#ifdef VENDOR_EDIT
+/*
 		pr_info("[%s] error ret: %d when set Reg[0x%x]=0x%x\n",
 			__func__, ret, (pFlag->offset), val);
+*/
+//#endif
 		return ret;
 	}
 
@@ -199,8 +203,12 @@ unsigned short pmic_get_register_value(PMU_FLAGS_LIST_ENUM flagname)
 	ret = pmic_read_interface((unsigned int)pFlag->offset, &val,
 		(unsigned int)(pFlag->mask), (unsigned int)(pFlag->shift));
 	if (ret != 0) {
+//#ifdef VENDOR_EDIT
+/*
 		pr_info("[%s] error ret: %d when get Reg[0x%x]\n", __func__,
 			ret, (pFlag->offset));
+*/
+//#endif
 		return ret;
 	}
 
@@ -221,8 +229,12 @@ unsigned short pmic_set_register_value_nolock(PMU_FLAGS_LIST_ENUM flagname,
 	ret = pmic_config_interface_nolock((unsigned int)(pFlag->offset), val,
 		(unsigned int)(pFlag->mask), (unsigned int)(pFlag->shift));
 	if (ret != 0) {
+//#ifdef VENDOR_EDIT
+/*
 		pr_info("[%s] error ret: %d when set Reg[0x%x]=0x%x\n",
 			__func__, ret, (pFlag->offset), val);
+*/
+//#endif
 		return ret;
 	}
 
@@ -238,8 +250,12 @@ unsigned short pmic_get_register_value_nolock(PMU_FLAGS_LIST_ENUM flagname)
 	ret = pmic_read_interface_nolock((unsigned int)pFlag->offset, &val,
 		(unsigned int)(pFlag->mask), (unsigned int)(pFlag->shift));
 	if (ret != 0) {
+//#ifdef VENDOR_EDIT
+/*
 		pr_info("[%s] error ret: %d when get Reg[0x%x]\n", __func__,
 			ret, (pFlag->offset));
+*/
+//#endif
 		return ret;
 	}
 

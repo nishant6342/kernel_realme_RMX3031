@@ -34,9 +34,26 @@
 #include "mtk_drm_mmp.h"
 #include "mtk_drm_fbdev.h"
 #include "mtk_drm_trace.h"
+//#ifdef OPLUS_FEATURE_ESD
+#include <mt-plat/mtk_boot_common.h>
+//#endif
 
 #define ESD_TRY_CNT 5
-#define ESD_CHECK_PERIOD 2000 /* ms */
+//#ifndef OPLUS_FEATURE_ESD
+/* liwei.a@PSW.MM.LCD.Display, modify for doing a esd detection per 5s*/
+//#define ESD_CHECK_PERIOD 2000 /* ms */
+//#else
+#define ESD_CHECK_PERIOD 5000 /* ms */
+
+extern unsigned long esd_mode;
+unsigned long esd_flag = 0;
+EXPORT_SYMBOL(esd_flag);
+unsigned int oppo_lcm_display_on = 1;
+EXPORT_SYMBOL(oppo_lcm_display_on);
+//#endif
+
+
+extern unsigned long esd_mode;
 
 /* pinctrl implementation */
 long _set_state(struct drm_crtc *crtc, const char *name)
@@ -111,7 +128,15 @@ static inline int _can_switch_check_mode(struct drm_crtc *crtc,
 static inline int _lcm_need_esd_check(struct mtk_panel_ext *panel_ext)
 {
 	int ret = 0;
-
+//#ifdef OPLUS_FEATURE_ESD
+	switch(get_boot_mode())
+	{
+		case FACTORY_BOOT:
+				 return ret;
+		default:
+				 break;
+	}
+//#endif
 	if (panel_ext->params->esd_check_enable == 1 &&
 		mtk_drm_lcm_is_connect()) {
 		ret = 1;
@@ -496,6 +521,11 @@ static int mtk_drm_esd_check_worker_kthread(void *data)
 			continue;
 		}
 
+		if (!oppo_lcm_display_on) {
+			DDPINFO("[ESD]SYQ check thread waked up accidently\n");
+			continue;
+		}
+		/*end*/
 		mutex_lock(&private->commit.lock);
 		DDP_MUTEX_LOCK(&mtk_crtc->lock, __func__, __LINE__);
 		mtk_drm_trace_begin("esd");
@@ -513,13 +543,22 @@ static int mtk_drm_esd_check_worker_kthread(void *data)
 		do {
 			ret = mtk_drm_esd_check(crtc);
 
-			if (!ret) /* success */
+			//#ifndef OPLUS_FEATURE_ESD
+			//if (!ret) /* success */
+				//break;
+			//#else
+			if (!esd_mode && !ret) /* success */
 				break;
-
+			esd_flag = 1;
+			//#endif
 			DDPPR_ERR(
 				"[ESD]esd check fail, will do esd recovery. try=%d\n",
 				i);
 			mtk_drm_esd_recover(crtc);
+			//#ifdef OPLUS_FEATURE_ESD
+			esd_mode = 0;
+			esd_flag = 0;
+			//#endif
 			recovery_flg = 1;
 		} while (++i < ESD_TRY_CNT);
 

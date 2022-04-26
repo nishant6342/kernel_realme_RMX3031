@@ -26,6 +26,10 @@
 #include <mtk_gauge_time_service.h>
 #include <mtk_gauge_class.h>
 
+#ifndef OPLUS_FEATURE_CHG_BASIC
+#define OPLUS_FEATURE_CHG_BASIC
+#endif
+
 
 /* ============================================================ */
 /* Define Macro Value */
@@ -46,13 +50,17 @@
 /* ============================================================ */
 /* power misc related */
 /* ============================================================ */
-#define BAT_VOLTAGE_LOW_BOUND 3400
+#define BAT_VOLTAGE_LOW_BOUND 3000
 #define BAT_VOLTAGE_HIGH_BOUND 3450
 #define LOW_TMP_BAT_VOLTAGE_LOW_BOUND 3350
+#ifndef OPLUS_FEATURE_CHG_BASIC
 #define SHUTDOWN_TIME 40
+#else
+#define SHUTDOWN_TIME 60
+#endif
 #define AVGVBAT_ARRAY_SIZE 30
 #define INIT_VOLTAGE 3450
-#define BATTERY_SHUTDOWN_TEMPERATURE 60
+#define BATTERY_SHUTDOWN_TEMPERATURE 90
 
 /* ============================================================ */
 /* typedef and Struct*/
@@ -365,6 +373,7 @@ struct fuel_gauge_custom_data {
 	int pseudo100_en_dis;
 	int pseudo1_iq_offset;
 
+
 	/* vboot related */
 	int qmax_sel;
 	int iboot_sel;
@@ -505,7 +514,6 @@ struct fuel_gauge_custom_data {
 	int ui_full_limit_soc4;
 	int ui_full_limit_ith4;
 	int ui_full_limit_time;
-
 	int ui_full_limit_fc_soc0;
 	int ui_full_limit_fc_ith0;
 	int ui_full_limit_fc_soc1;
@@ -516,7 +524,6 @@ struct fuel_gauge_custom_data {
 	int ui_full_limit_fc_ith3;
 	int ui_full_limit_fc_soc4;
 	int ui_full_limit_fc_ith4;
-
 	/* using voltage to limit uisoc in 1% case */
 	int ui_low_limit_en;
 	int ui_low_limit_soc0;
@@ -762,6 +769,7 @@ struct ag_center_data_st {
 	int data[43];
 	struct timespec times[3];
 };
+
 struct mtk_battery {
 
 	int fix_coverity;
@@ -787,6 +795,10 @@ struct mtk_battery {
 	int battery_id;
 
 	struct zcv_filter zcvf;
+
+/*fcc*/
+	int prev_batt_fcc;
+	int prev_batt_remaining_capacity;
 
 /*simulator log*/
 	struct simulator_log log;
@@ -855,6 +867,10 @@ struct mtk_battery {
 	unsigned int proc_subcmd;
 	unsigned int proc_subcmd_para1;
 	char proc_log[4096];
+#ifdef OPLUS_FEATURE_CHG_BASIC
+/*Yichun.Chen  PSW.BSP.CHG  2020-03-10  for aging issue*/
+	char ag_log[2000];
+#endif
 
 /*battery interrupt*/
 	int fg_bat_int1_gap;
@@ -982,6 +998,7 @@ extern int get_shutdown_cond_flag(void);
 /* mtk_battery.c */
 extern bool is_battery_init_done(void);
 extern int force_get_tbat(bool update);
+extern int force_get_tbat_internal(bool update);
 extern int bat_get_debug_level(void);
 extern bool is_kernel_power_off_charging(void);
 extern bool is_fg_disabled(void);
@@ -991,6 +1008,8 @@ extern void bmd_ctrl_cmd_from_user(void *nl_data, struct fgd_nl_msg_t *ret_msg);
 extern int interpolation(int i1, int b1, int i2, int b2, int i);
 extern struct mtk_battery *get_mtk_battery(void);
 extern void battery_update_psd(struct battery_data *bat_data);
+extern int wakeup_fg_algo(unsigned int flow_state);
+extern int wakeup_fg_algo_cmd(unsigned int flow_state, int cmd, int para1);
 extern int wakeup_fg_algo_atomic(unsigned int flow_state);
 extern unsigned int TempToBattVolt(int temp, int update);
 extern int fg_get_battery_temperature_for_zcv(void);
@@ -1054,9 +1073,6 @@ extern void fg_update_sw_low_battery_check(unsigned int thd);
 extern void fg_sw_bat_cycle_accu(void);
 extern void fg_ocv_query_soc(int ocv);
 extern void fg_int_event(struct gauge_device *gauge_dev, enum gauge_event evt);
-extern int mtk_get_bat_health(void);
-extern int mtk_get_bat_show_ag(void);
-
 
 /* GM3 simulator */
 extern void gm3_log_init(void);

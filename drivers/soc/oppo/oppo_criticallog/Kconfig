@@ -1,0 +1,7 @@
+#ifdef VENDOR_EDIT
+config OPPO_CRITICALLOG
+	bool "config oppo critical log"
+	default y
+	help
+            define this config to init oppo critical log driver.
+#endif /* VENDOR_EDIT */

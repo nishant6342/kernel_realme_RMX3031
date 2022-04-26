@@ -12,7 +12,9 @@
  */
 
 #include "gpio.h"
-
+#ifdef VENDOR_EDIT
+#include <soc/oplus/system/oppo_project.h>
+#endif
 struct GPIO_PINCTRL gpio_pinctrl_list_cam[
 			GPIO_CTRL_STATE_MAX_NUM_CAM] = {
 	/* Main */
@@ -35,6 +37,12 @@ struct GPIO_PINCTRL gpio_pinctrl_list_switch[
 	{"cam_mipi_switch_en_0"},
 	{"cam_mipi_switch_sel_1"},
 	{"cam_mipi_switch_sel_0"}
+};
+#endif
+
+#ifdef VENDOR_EDIT
+struct GPIO_PINCTRL gpio_pinctrl_list_ldo_enable[1] = {
+	{"fan53870_chip_enable"}
 };
 #endif
 
@@ -87,6 +95,24 @@ static enum IMGSENSOR_RETURN gpio_init(
 			}
 		}
 	}
+	#ifdef VENDOR_EDIT
+	if (is_project(20131) || is_project(20133)
+		|| is_project(20255) || is_project(20255)
+		|| is_project(20615) || is_project(20662)
+		|| is_project(20619) || is_project(21609)) {
+
+		if (gpio_pinctrl_list_ldo_enable[0].ppinctrl_lookup_names) {
+			pgpio->pinctrl_state_ldo_enable = pinctrl_lookup_state(
+				pgpio->ppinctrl,
+				gpio_pinctrl_list_ldo_enable[0].ppinctrl_lookup_names);
+		}
+		if (pgpio->pinctrl_state_ldo_enable == NULL) {
+			PK_PR_ERR("%s : pinctrl err, %s\n", __func__,
+				gpio_pinctrl_list_ldo_enable[0].ppinctrl_lookup_names);
+			ret = IMGSENSOR_RETURN_ERROR;
+		}
+	}
+	#endif
 #ifdef MIPI_SWITCH
 	for (i = 0; i < GPIO_CTRL_STATE_MAX_NUM_SWITCH; i++) {
 		if (gpio_pinctrl_list_switch[i].ppinctrl_lookup_names) {
@@ -129,9 +155,13 @@ static enum IMGSENSOR_RETURN gpio_set(
 
 	if (pin < IMGSENSOR_HW_PIN_PDN ||
 #ifdef MIPI_SWITCH
-	    pin > IMGSENSOR_HW_PIN_MIPI_SWITCH_SEL ||
+		pin > IMGSENSOR_HW_PIN_MIPI_SWITCH_SEL ||
 #else
+		#ifdef VENDOR_EDIT
+		pin > IMGSENSOR_HW_PIN_FAN53870_ENABLE ||
+		#else
 		pin > IMGSENSOR_HW_PIN_DOVDD ||
+		#endif
 #endif
 		pin_state < IMGSENSOR_HW_PIN_STATE_LEVEL_0 ||
 		pin_state > IMGSENSOR_HW_PIN_STATE_LEVEL_HIGH ||
@@ -151,9 +181,20 @@ static enum IMGSENSOR_RETURN gpio_set(
 	else
 #endif
 	{
+		#ifdef VENDOR_EDIT
+		//if ((pin == IMGSENSOR_HW_PIN_FAN53870_ENABLE) && is_project(OPPO_19040)) {
+		if (pin == IMGSENSOR_HW_PIN_FAN53870_ENABLE) {
+			ppinctrl_state = pgpio->pinctrl_state_ldo_enable;
+	    } else {
+			ppinctrl_state =
+				pgpio->ppinctrl_state_cam[sensor_idx][
+				((pin - IMGSENSOR_HW_PIN_PDN) << 1) + gpio_state];
+		}
+		#else
 		ppinctrl_state =
 			pgpio->ppinctrl_state_cam[sensor_idx][
 			((pin - IMGSENSOR_HW_PIN_PDN) << 1) + gpio_state];
+		#endif
 	}
 
 	mutex_lock(pgpio->pgpio_mutex);

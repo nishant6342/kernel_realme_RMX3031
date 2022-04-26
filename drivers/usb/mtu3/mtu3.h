@@ -319,6 +319,14 @@ struct ssusb_mtk {
 	enum mtu3_dr_force_mode drp_state;
 	struct charger_device *chg_dev;
 	void *priv_data;
+
+#ifdef CONFIG_OPLUS_CHARGER_MTK6771
+/* Qiao.Hu@@Prd6.BaseDrv.USB.Basic, 2017/07/28, Add for otg */
+	spinlock_t		change_irq_lock;
+	bool		user_request_polling;
+	struct delayed_work	start_polling_delay;
+	struct delayed_work	stop_polling_delay;
+#endif /* VENDOR_EDIT */
 };
 
 /**

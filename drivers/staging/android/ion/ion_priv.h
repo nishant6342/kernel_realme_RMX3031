@@ -93,6 +93,12 @@ struct ion_buffer {
 #ifdef MTK_ION_DMABUF_SUPPORT
 	struct list_head attachments;
 #endif
+#if defined(OPLUS_FEATURE_MEMLEAK_DETECT) && defined(CONFIG_DUMP_TASKS_MEM)
+	struct task_struct *tsk;
+#endif
+#if defined(OPLUS_FEATURE_MEMLEAK_DETECT) && defined(CONFIG_MEMLEAK_DETECT_THREAD) && defined(CONFIG_SVELTE)
+	unsigned long jiffies;
+#endif
 };
 
 void ion_buffer_destroy(struct ion_buffer *buffer);
@@ -102,7 +108,8 @@ void ion_buffer_destroy(struct ion_buffer *buffer);
  * @dev:		the actual misc device
  * @buffers:		an rb tree of all the existing buffers
  * @buffer_lock:	lock protecting the tree of buffers
- * @lock:		rwsem protecting the tree of heaps and clients
+ * @client_lock:	rwsem protecting the tree of clients
+ * @heap_lock:		rwsem protecting the tree of heaps 
  * @heaps:		list of all the heaps in the system
  * @user_clients:	list of all the clients created from userspace
  */
@@ -110,8 +117,16 @@ struct ion_device {
 	struct miscdevice dev;
 	struct rb_root buffers;
 	struct mutex buffer_lock; /* mutex */
-	struct rw_semaphore lock;
 	struct plist_head heaps;
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device
+ */
+	struct rw_semaphore client_lock;
+	struct rw_semaphore heap_lock;
+#else /* OPLUS_FEATURE_PERFORMANCE */
+	struct rw_semaphore lock;
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 	long (*custom_ioctl)(struct ion_client *client, unsigned int cmd,
 			     unsigned long arg);
 	struct rb_root clients;

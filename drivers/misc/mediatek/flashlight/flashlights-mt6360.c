@@ -25,6 +25,10 @@
 #include <linux/of.h>
 #include <linux/list.h>
 #include <linux/delay.h>
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*zengzhancheng@Camera.Driver add for rm 5gb & 5gh torch duty */
+#include <soc/oppo/oppo_project.h>
+#endif
 
 #include "richtek/rt-flashlight.h"
 #include "mtk_charger.h"
@@ -104,11 +108,25 @@ static const unsigned char mt6360_torch_level[MT6360_LEVEL_TORCH] = {
 	0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E
 };
 
+static const unsigned char mt6360_torch_level_mt6893[MT6360_LEVEL_TORCH] = {
+	0x00, 0x01, 0x02, 0x06, 0x06, 0x0A, 0x06, 0x0E, 0x10, 0x12,
+	0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E
+};
+
+
 /* 0x00~0x74 6.25mA/step 0x75~0xB1 12.5mA/step */
 static const unsigned char mt6360_strobe_level[MT6360_LEVEL_FLASH] = {
 	0x00, 0x04, 0x08, 0x0C, 0x10, 0x14, 0x18, 0x1C, 0x20, 0x24,
 	0x28, 0x2C, 0x30, 0x34, 0x38, 0x3C, 0x44, 0x4C, 0x54, 0x5C,
 	0x64, 0x6C, 0x74, 0x78, 0x7C, 0x80, 0x84, 0x88, 0x8C, 0x90,
+	0x94, 0x98
+};
+
+/* 0x00~0x74 6.25mA/step 0x75~0xB1 12.5mA/step */
+static const unsigned char mt6360_strobe_level_mt6893[MT6360_LEVEL_FLASH] = {
+	0x00, 0x04, 0x08, 0x0C, 0x10, 0x14, 0x18, 0x1C, 0x20, 0x24,
+	0x28, 0x2C, 0x30, 0x34, 0x38, 0x3C, 0x44, 0x4C, 0x54, 0x5C,
+	0x64, 0x6C, 0x74, 0x78, 0x7C, 0x80, 0x84, 0x85, 0x86, 0x88,
 	0x94, 0x98
 };
 
@@ -297,11 +315,37 @@ static int mt6360_set_level_ch1(int level)
 	}
 
 	/* set brightness level */
+	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*zengzhancheng@Camera.Driver add for rm 5gb & 5gh torch duty */
+	if (!mt6360_is_torch(level)) {
+
+		if (is_project(OPPO_20615) || is_project(OPPO_20662) || is_project(OPPO_20619) || is_project(OPPO_21609) ) {
+			flashlight_set_torch_brightness(
+				flashlight_dev_ch1, mt6360_torch_level_mt6893[level]);
+			pr_info("torch_level_mt6893:%d ,0X%x\n",level,mt6360_torch_level_mt6893[level]);
+		} else {
+			printk("enter set_torch_brightness");
+			flashlight_set_torch_brightness(
+				flashlight_dev_ch1, mt6360_torch_level[level]);
+			 pr_info("torch_level:%d ,0X%x\n",level,mt6360_torch_level[level]);
+		}
+	}
+	if (is_project(OPPO_20615) || is_project(OPPO_20662) || is_project(OPPO_20619) || is_project(OPPO_21609) ) {
+		flashlight_set_strobe_brightness(
+			flashlight_dev_ch1, mt6360_strobe_level_mt6893[level]);
+			pr_info("strobe_level_mt6893:%d ,0X%x\n",level,mt6360_strobe_level_mt6893[level]);
+	} else {
+		flashlight_set_strobe_brightness(
+			flashlight_dev_ch1, mt6360_strobe_level[level]);
+			pr_info("strobe_level:%d ,0X%x\n",level,mt6360_strobe_level[level]);
+	}
+	#else
 	if (!mt6360_is_torch(level))
 		flashlight_set_torch_brightness(
 				flashlight_dev_ch1, mt6360_torch_level[level]);
 	flashlight_set_strobe_brightness(
 			flashlight_dev_ch1, mt6360_strobe_level[level]);
+	#endif
 
 	return 0;
 }

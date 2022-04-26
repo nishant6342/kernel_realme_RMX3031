@@ -55,6 +55,13 @@
 #if defined(CONFIG_MTK_CAM_SECURE_I2C)
 #include "imgsensor_ca.h"
 #endif
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
+#define OPLUS_FEATURE_CAMERA_COMMON
+#endif
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#include "imgsensor_eeprom.h"
+#include "imgsensor_hwcfg_custom.h"
+#endif
 
 static DEFINE_MUTEX(gimgsensor_mutex);
 static DEFINE_MUTEX(gimgsensor_open_mutex);
@@ -212,6 +219,9 @@ MINT32 imgsensor_sensor_open(struct IMGSENSOR_SENSOR *psensor)
 			PK_PR_ERR("SensorOpen fail");
 		} else {
 			psensor_inst->state = IMGSENSOR_STATE_OPEN;
+			#ifdef OPLUS_FEATURE_CAMERA_COMMON
+			Oplusimgsensor_powerstate_notify(1);
+			#endif
 		}
 
 #ifdef IMGSENSOR_OC_ENABLE
@@ -473,6 +483,9 @@ MINT32 imgsensor_sensor_close(struct IMGSENSOR_SENSOR *psensor)
 				IMGSENSOR_HW_POWER_STATUS_OFF);
 
 			psensor_inst->state = IMGSENSOR_STATE_CLOSE;
+			#ifdef OPLUS_FEATURE_CAMERA_COMMON
+			Oplusimgsensor_powerstate_notify(0);
+			#endif
 		}
 
 		imgsensor_mutex_unlock(psensor_inst);
@@ -494,7 +507,10 @@ static void imgsensor_init_sensor_list(void)
 	const char *penable_sensor;
 	struct device_node *of_node
 		= of_find_compatible_node(NULL, NULL, "mediatek,imgsensor");
-
+	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*Henry Chang@Camera.Drv add for 20131 20200728*/
+	psensor_list = Oplusimgsensor_Sensorlist();
+	#endif
 	ret = of_property_read_string(of_node, "cust-sensor", &penable_sensor);
 	if (ret < 0) {
 		PK_DBG("Property cust-sensor not defined\n");
@@ -567,9 +583,12 @@ int imgsensor_set_driver(struct IMGSENSOR_SENSOR *psensor)
 	struct IMGSENSOR_SENSOR_INST *psensor_inst = &psensor->inst;
 
 	imgsensor_mutex_init(psensor_inst);
+	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	Oplusimgsensor_i2c_init(psensor_inst);
+	#else
 	imgsensor_i2c_init(&psensor_inst->i2c_cfg,
-	imgsensor_custom_config[
-	(unsigned int)psensor_inst->sensor_idx].i2c_dev);
+		imgsensor_custom_config[psensor_inst->sensor_idx].i2c_dev);
+	#endif
 	imgsensor_i2c_filter_msg(&psensor_inst->i2c_cfg, true);
 
 	while (i < MAX_NUM_OF_SUPPORT_SENSOR && pimgsensor->psensor_list[i]) {
@@ -984,6 +1003,23 @@ static inline int adopt_CAMERA_HW_FeatureControl(void *pBuf)
 
 	/*in case that some structure are passed from user sapce by ptr */
 	switch (pFeatureCtrl->FeatureId) {
+	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
+	case SENSOR_FEATURE_SET_SENSOR_OTP:
+		ret = imgsensor_sensor_feature_control(psensor,
+					pFeatureCtrl->FeatureId,
+					(unsigned char *)pFeaturePara,
+					(unsigned int *)&FeatureParaLen);
+		break;
+	case SENSOR_FEATURE_GET_EEPROM_COMDATA:
+	case SENSOR_FEATURE_GET_EEPROM_STEREODATA:
+	{
+		enum IMGSENSOR_SENSOR_IDX sensor_idx = psensor->inst.sensor_idx;
+		ret = Eeprom_Control(sensor_idx, pFeatureCtrl->FeatureId,
+						(unsigned char *)pFeaturePara, 0);
+		break;
+	}
+	#endif
 	case SENSOR_FEATURE_SET_MCLK_DRIVE_CURRENT:
 	{
 		MUINT32 __current = (*(MUINT32 *)pFeaturePara);
@@ -2195,6 +2231,7 @@ static int imgsensor_probe(struct platform_device *pplatform_device)
 
 	phw->common.pplatform_device = pplatform_device;
 
+	oplus_imgsensor_hwcfg();
 	imgsensor_hw_init(phw);
 	imgsensor_i2c_create();
 	imgsensor_proc_init();

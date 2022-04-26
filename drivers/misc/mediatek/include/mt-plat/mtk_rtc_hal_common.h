@@ -34,6 +34,27 @@ enum rtc_spare_enum {
 	RTC_32K_LESS,
 	RTC_LP_DET,
 	RTC_FG_INIT,
+	#ifdef VENDOR_EDIT
+	RTC_REBOOT_KERNEL, // 15
+	RTC_SILENCE_BOOT,//16
+	RTC_META_BOOT,//17
+	RTC_SAU_BOOT,//18
+	#endif /* VENDOR_EDIT */
+	#ifdef VENDOR_EDIT
+	RTC_OPPO_BATTERY,//19
+	#endif /* VENDOR_EDIT */
+#ifdef VENDOR_EDIT
+/* Fuchun.Liao@BSP.CHG.Basic 2018/02/12 modify for factory mode */
+	RTC_FACTORY_BOOT,
+#endif /* VENDOR_EDIT */
+#ifdef VENDOR_EDIT
+/* Fuchun.Liao@BSP.CHG.Basic 2018/08/08 modify for sensor i2c err workaround */
+	RTC_SENSOR_CAUSE_PANIC,
+#endif /* VENDOR_EDIT */
+	RTC_SAFE_BOOT,
+#ifdef OPLUS_FEATURE_AGINGTEST
+	RTC_AGINGTEST_BOOT,
+#endif /*OPLUS_FEATURE_AGINGTEST */
 	RTC_SPAR_NUM
 };
 

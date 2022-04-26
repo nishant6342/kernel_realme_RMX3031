@@ -746,7 +746,13 @@ static int ion_history_record(void *data)
 
 		/* == client == */
 		if (g_client_history) {
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+			down_read(&dev->client_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 			down_read(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 			start = sched_clock();
 			for (n = rb_first(&dev->clients); n; n = rb_next(n)) {
 				struct ion_client
@@ -796,7 +802,13 @@ static int ion_history_record(void *data)
 					     "kernel", size, client);
 				}
 			}
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+			up_read(&dev->client_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 			up_read(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 		}
 	}
 

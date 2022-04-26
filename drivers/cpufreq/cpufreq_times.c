@@ -25,6 +25,11 @@
 #include <linux/spinlock.h>
 #include <linux/threads.h>
 
+#ifdef CONFIG_OPLUS_FEATURE_MIDAS
+#include <linux/sched/task.h>
+#include <linux/midas_proc.h>
+#endif
+
 #define UID_HASH_BITS 10
 
 static DECLARE_HASHTABLE(uid_hash_table, UID_HASH_BITS);
@@ -43,8 +48,22 @@ struct uid_entry {
 	struct hlist_node hash;
 	struct rcu_head rcu;
 	struct concurrent_times *concurrent_times;
+#ifdef CONFIG_OPLUS_FEATURE_MIDAS
+	u32 updated;
+#endif
 	u64 time_in_state[0];
 };
+
+#ifdef CONFIG_OPLUS_FEATURE_MIDAS
+static DEFINE_SPINLOCK(midas_lock); /* midas_get_uid_state/midas_get_pid_state */
+
+struct pid_info {
+	unsigned int cnt;
+	struct task_struct *array[CNT_MAX];
+};
+
+static struct pid_info midas_pid_info[TYPE_TOTAL];
+#endif
 
 /**
  * struct cpu_freqs - per-cpu frequency information
@@ -226,6 +245,80 @@ static int uid_time_in_state_seq_show(struct seq_file *m, void *v)
 	return 0;
 }
 
+#ifdef CONFIG_OPLUS_FEATURE_MIDAS
+void midas_get_uid_state(void *data) {
+	struct uid_entry *uid_entry;
+	struct midas_id_state *midas_data = data;
+	int i, cnt = 0;
+	long long pos;
+	unsigned long flags;
+
+	spin_lock_irqsave(&uid_lock, flags);
+
+	for (pos = 0; pos < HASH_SIZE(uid_hash_table); pos++) {
+		if (hlist_empty(&uid_hash_table[pos]))
+			continue;
+
+		hlist_for_each_entry_rcu(uid_entry, &uid_hash_table[pos], hash) {
+			if (!uid_entry->updated)
+				continue;
+
+			if (uid_entry->max_state && cnt < CNT_MAX)
+				midas_data->insts[cnt].id[ID_UID] = uid_entry->uid;
+
+			for (i = 0; i < uid_entry->max_state; ++i)
+				midas_data->insts[cnt].time_in_state[i] =
+					nsec_to_clock_t(uid_entry->time_in_state[i]);
+
+			uid_entry->updated = 0;
+			cnt++;
+		}
+	}
+
+	midas_data->cnt = cnt;
+
+	spin_unlock_irqrestore(&uid_lock, flags);
+}
+EXPORT_SYMBOL_GPL(midas_get_uid_state);
+
+void midas_get_pid_state(void *data, int type) {
+	struct midas_id_state *midas_data = data;
+	int i, j, max_state, cnt = 0;
+	unsigned long flags;
+	struct task_struct *p;
+
+	spin_lock_irqsave(&midas_lock, flags);
+	for (i = 0; i < midas_pid_info[type].cnt; i++) {
+		p = midas_pid_info[type].array[i];
+		if (!pid_alive(p)) {
+			put_task_struct(p);
+			continue;
+		}
+
+		if (p->time_in_state && p->max_state) {
+			midas_data->insts[cnt].id[ID_PID] = task_pid_nr(p);
+			midas_data->insts[cnt].id[ID_TGID] = task_tgid_nr(p);
+			midas_data->insts[cnt].id[ID_UID] =
+				from_kuid_munged(current_user_ns(), task_uid(p));;
+			strncpy(midas_data->insts[cnt].name, p->comm, TASK_COMM_LEN);
+			max_state = min((int)p->max_state, STATE_MAX);
+			for (j = 0; j < max_state; j++) {
+				midas_data->insts[cnt].time_in_state[j] =
+					nsec_to_clock_t(p->time_in_state[j]);
+			}
+			cnt++;
+		}
+		put_task_struct(p);
+	}
+
+	midas_data->cnt = cnt;
+	midas_pid_info[type].cnt = 0;
+
+	spin_unlock_irqrestore(&midas_lock, flags);
+}
+EXPORT_SYMBOL_GPL(midas_get_pid_state);
+#endif
+
 static int concurrent_time_seq_show(struct seq_file *m, void *v,
 	atomic64_t *(*get_times)(struct concurrent_times *))
 {
@@ -406,6 +499,9 @@ void cpufreq_acct_update_power(struct task_struct *p, u64 cputime)
 	struct cpufreq_policy *policy;
 	uid_t uid = from_kuid_munged(current_user_ns(), task_uid(p));
 	int cpu = 0;
+#ifdef CONFIG_OPLUS_FEATURE_MIDAS
+	int type, cnt, i;
+#endif
 
 	if (!freqs || is_idle_task(p) || p->flags & PF_EXITING)
 		return;
@@ -418,10 +514,35 @@ void cpufreq_acct_update_power(struct task_struct *p, u64 cputime)
 		p->time_in_state[state] += cputime;
 	spin_unlock_irqrestore(&task_time_in_state_lock, flags);
 
+#ifdef CONFIG_OPLUS_FEATURE_MIDAS
+	spin_lock_irqsave(&midas_lock, flags);
+	type = (uid == 0) ? TYPE_RPID : ((uid == 1000) ? TYPE_SPID : -1);
+	if (type >= TYPE_RPID && type < TYPE_TOTAL) {
+		cnt = midas_pid_info[type].cnt;
+		for (i = 0; i < cnt; i++) {
+			if (p == midas_pid_info[type].array[i])
+				break;
+		}
+
+		if (i == cnt && i < CNT_MAX) {
+			midas_pid_info[type].array[i] = p;
+			midas_pid_info[type].cnt = ((cnt + 1) > CNT_MAX) ? CNT_MAX : (cnt + 1);
+			get_task_struct(p);
+		}
+	}
+	spin_unlock_irqrestore(&midas_lock, flags);
+#endif
 	spin_lock_irqsave(&uid_lock, flags);
 	uid_entry = find_or_register_uid_locked(uid);
+#ifdef CONFIG_OPLUS_FEATURE_MIDAS
+	if (uid_entry && state < uid_entry->max_state) {
+		uid_entry->time_in_state[state] += cputime;
+		uid_entry->updated = 1;
+	}
+#else
 	if (uid_entry && state < uid_entry->max_state)
 		uid_entry->time_in_state[state] += cputime;
+#endif
 	spin_unlock_irqrestore(&uid_lock, flags);
 
 	rcu_read_lock();

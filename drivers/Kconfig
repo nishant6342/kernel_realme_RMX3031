@@ -215,4 +215,15 @@ source "drivers/tee/Kconfig"
 
 source "drivers/mux/Kconfig"
 
+source "drivers/nfc/nq330-i2c/Kconfig"
+
+source "drivers/nfc/p73-spi-nq330/Kconfig"
+
+##ifdef OPLUS_FEATURE_BRINGUP
+#HuangRuhong@CONNECTIVITY.NFC.BASIC.HARDWARE , 2020/08/05, add for : add NFC driver
+source "drivers/nfc/Kconfig"
+source "drivers/nfc/pn553-i2c/Kconfig"
+source "drivers/nfc/p73-spi/Kconfig"
+#endif /* OPLUS_FEATURE_NFC_BRINGUP */
+
 endmenu

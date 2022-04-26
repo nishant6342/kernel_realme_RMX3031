@@ -160,7 +160,6 @@ void __fpsgo_systrace_b(pid_t tgid, const char *fmt, ...)
 		return;
 	else if (unlikely(len == 256))
 		log[255] = '\0';
-
 	snprintf(buf2, sizeof(buf2), "B|%d|%s\n", tgid, log);
 	tracing_mark_write(buf2);
 }
@@ -170,7 +169,6 @@ void __fpsgo_systrace_e(void)
 	char buf2[256];
 	if (unlikely(!fpsgo_update_tracemark()))
 		return;
-
 	snprintf(buf2, sizeof(buf2), "E\n");
 	tracing_mark_write(buf2);
 }

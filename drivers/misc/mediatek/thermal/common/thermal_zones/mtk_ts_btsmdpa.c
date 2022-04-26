@@ -37,6 +37,11 @@
 #include <linux/iio/consumer.h>
 #include <linux/iio/iio.h>
 #endif
+
+#ifdef CONFIG_HORAE_THERMAL_SHELL
+#include "mtk_ts_ntc_cust.h"
+#endif
+
 /*=============================================================
  *Weak functions
  *=============================================================
@@ -502,7 +507,7 @@ static __s32 mtkts_btsmdpa_thermistor_conver_temp(__s32 Res)
 	int i = 0;
 	int asize = 0;
 	__s32 RES1 = 0, RES2 = 0;
-	__s32 TAP_Value = -200, TMP1 = 0, TMP2 = 0;
+	__s32 TAP_Value = -2000, TMP1 = 0, TMP2 = 0;
 
 #ifdef APPLY_PRECISE_BTS_TEMP
 	TAP_Value = TAP_Value * 1000;
@@ -1239,6 +1244,14 @@ struct file *file, const char __user *buffer, size_t count, loff_t *data)
 	if (ptr_param_data == NULL)
 		return -ENOMEM;
 
+#ifdef CONFIG_HORAE_THERMAL_SHELL
+	if(mtk_ts_ntc_cust_get(NTC_CUST_SUPPORT, NTC_BTSMDPA) == 1){
+		pr_err("mtkts_btsmdpa_param_write: ntc cust support, force return. ntc_index: %d\n", NTC_BTSMDPA);
+		kfree(ptr_param_data);
+		return count;
+	}
+#endif
+
 	len = (count < (sizeof(ptr_param_data->desc) - 1)) ?
 				count : (sizeof(ptr_param_data->desc) - 1);
 
@@ -1440,6 +1453,15 @@ static int mtkts_btsmdpa_probe(struct platform_device *pdev)
 		__func__);
 		return -ENODEV;
 	}
+
+#ifdef CONFIG_HORAE_THERMAL_SHELL
+	mtk_ts_ntc_cust_parse_dt(pdev->dev.of_node, NTC_BTSMDPA);
+	mtk_ts_ntc_overide_by_cust_if_needed(&g_RAP_pull_up_R, PULL_UP_R_INDEX, NTC_BTSMDPA);
+	mtk_ts_ntc_overide_by_cust_if_needed(&g_TAP_over_critical_low, OVER_CRITICAL_LOW_INDEX, NTC_BTSMDPA);
+	mtk_ts_ntc_overide_by_cust_if_needed(&g_RAP_pull_up_voltage, PULL_UP_VOLTAGE_INDEX, NTC_BTSMDPA);
+	mtk_ts_ntc_overide_by_cust_if_needed(&g_RAP_ntc_table, NTC_TABLE_INDEX, NTC_BTSMDPA);
+	mtk_ts_ntc_overide_by_cust_if_needed(&g_RAP_ADC_channel, ADC_CHANNEL_INDEX, NTC_BTSMDPA);
+#endif
 
 	thermistor_ch1 = devm_kzalloc(&pdev->dev, sizeof(*thermistor_ch1),
 		GFP_KERNEL);

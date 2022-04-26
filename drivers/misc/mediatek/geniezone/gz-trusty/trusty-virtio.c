@@ -117,7 +117,8 @@ static void check_all_vqs(struct trusty_ctx *tctx)
 	list_for_each_entry(tvdev, &tctx->vdev_list, node) {
 		for (i = 0; i < tvdev->vring_num; i++) {
 			/* vq->vq.callback(&vq->vq);  trusty_virtio_notify */
-			vring_interrupt(0, tvdev->vrings[i].vq);
+			if (tvdev->vrings[i].vq)
+				vring_interrupt(0, tvdev->vrings[i].vq);
 		}
 	}
 }

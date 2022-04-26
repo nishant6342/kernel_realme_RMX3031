@@ -33,6 +33,10 @@
 #include "mtk_devinfo.h"
 #endif
 
+#if defined(OPLUS_FEATURE_CORE_CTL) && defined(CONFIG_SCHED_CORE_CTL)
+#include <linux/sched/core_ctl.h>
+#endif /* OPLUS_FEATURE_CORE_CTL */
+
 #define SCHED_HINT_THROTTLE_NSEC 10000000 /* 10ms for throttle */
 
 struct sched_hint_data {
@@ -403,7 +407,7 @@ err:
 late_initcall(sched_hint_init);
 
 #ifdef CONFIG_MTK_SCHED_BOOST
-static int sched_boost_type = SCHED_NO_BOOST;
+int sched_boost_type = SCHED_NO_BOOST;
 
 inline int valid_cpu_prefer(int task_prefer)
 {
@@ -610,7 +614,9 @@ void __init init_efuse_info(void)
 	efuse_aware_big_thermal = (get_devinfo_with_index(7) & 0xFF) == 0x30;
 }
 #endif
-
+#ifdef CONFIG_MTK_SCHED_BOOST
+extern oplus_task_sched_boost(struct task_struct *p, int *task_prefer);
+#endif
 int select_task_prefer_cpu(struct task_struct *p, int new_cpu)
 {
 	int task_prefer;
@@ -626,6 +632,9 @@ int select_task_prefer_cpu(struct task_struct *p, int new_cpu)
 
 	task_prefer = cpu_prefer(p);
 
+#ifdef CONFIG_MTK_SCHED_BOOST
+	oplus_task_sched_boost(p, &task_prefer);
+#endif
 	if (!hinted_cpu_prefer(task_prefer))
 		goto out;
 
@@ -635,8 +644,13 @@ int select_task_prefer_cpu(struct task_struct *p, int new_cpu)
 	}
 
 	for (i = 0; i < domain_cnt; i++) {
-		iter_domain = (task_prefer == SCHED_PREFER_BIG) ?
-				domain_cnt-i-1 : i;
+		if (task_prefer == SCHED_PREFER_BIG)
+			iter_domain = domain_cnt - i - 1;
+		else if (task_prefer == SCHED_PREFER_MEDIUM)
+			iter_domain = (i < domain_cnt -1) ? i + 1 : 0;
+		else
+			iter_domain = i;
+
 		domain = tmp_domain[iter_domain];
 
 #ifdef CONFIG_MTK_TASK_TURBO
@@ -645,15 +659,14 @@ int select_task_prefer_cpu(struct task_struct *p, int new_cpu)
 			break;
 #endif
 
-		if (cpumask_test_cpu(new_cpu, &domain->possible_cpus) && !cpu_isolated(new_cpu))
+		if (cpumask_test_cpu(new_cpu, &domain->possible_cpus))
 			goto out;
 
 		for_each_cpu(iter_cpu, &domain->possible_cpus) {
 
 			/* tsk with prefer idle to find bigger idle cpu */
 			if (!cpu_online(iter_cpu) ||
-				!cpumask_test_cpu(iter_cpu, tsk_cpus_allow) ||
-				cpu_isolated(iter_cpu))
+				!cpumask_test_cpu(iter_cpu, tsk_cpus_allow))
 				continue;
 
 			/* favoring tasks that prefer idle cpus
@@ -734,7 +747,8 @@ int set_sched_boost(unsigned int val)
 
 	if (sched_boost_type == val)
 		return 0;
-
+	if (val == SCHED_ALL_BOOST)
+		return 0;
 	mutex_lock(&sched_boost_mutex);
 	/* back to original setting*/
 	if (sched_boost_type == SCHED_ALL_BOOST)
@@ -749,16 +763,23 @@ int set_sched_boost(unsigned int val)
 			sysctl_sched_isolation_hint_enable =
 				sysctl_sched_isolation_hint_enable_backup;
 
+#if defined(OPLUS_FEATURE_CORE_CTL) && defined(CONFIG_SCHED_CORE_CTL)
+		core_ctl_set_boost(false);
+#endif /* OPLUS_FEATURE_CORE_CTL */
 	} else if ((val > SCHED_NO_BOOST) && (val < SCHED_UNKNOWN_BOOST)) {
 
 		sysctl_sched_isolation_hint_enable_backup =
 				sysctl_sched_isolation_hint_enable;
 		sysctl_sched_isolation_hint_enable = 0;
 
-		if (val == SCHED_ALL_BOOST)
+		if (val == SCHED_ALL_BOOST) {
 			sched_scheduler_switch(SCHED_HMP_LB);
-		else if (val == SCHED_FG_BOOST)
-			sched_set_boost_fg();
+#if defined(OPLUS_FEATURE_CORE_CTL) && defined(CONFIG_SCHED_CORE_CTL)
+			core_ctl_set_boost(true);
+#endif /* OPLUS_FEATURE_CORE_CTL */
+		} else if (val == SCHED_FG_BOOST){
+			//In MTK platform,we use oplus_task_sched_boost
+		}
 	}
 	printk_deferred("[name:sched_boost&] sched boost: set %d\n",
 			sched_boost_type);

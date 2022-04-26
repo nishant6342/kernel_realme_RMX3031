@@ -19,6 +19,13 @@
 
 #include "imgsensor_sensor.h"
 #include "imgsensor_hw.h"
+#ifndef VENDOR_EDIT
+#define VENDOR_EDIT
+#endif
+#ifdef VENDOR_EDIT
+#include "imgsensor_eeprom.h"
+#include "imgsensor_hwcfg_custom.h"
+#endif
 
 enum IMGSENSOR_RETURN imgsensor_hw_init(struct IMGSENSOR_HW *phw)
 {
@@ -44,7 +51,11 @@ enum IMGSENSOR_RETURN imgsensor_hw_init(struct IMGSENSOR_HW *phw)
 	for (i = 0; i < IMGSENSOR_SENSOR_IDX_MAX_NUM; i++) {
 		psensor_pwr = &phw->sensor_pwr[i];
 
+		#ifdef VENDOR_EDIT
+		pcust_pwr_cfg = Oplusimgsensor_Custom_Config();
+		#else
 		pcust_pwr_cfg = imgsensor_custom_config;
+		#endif
 		while (pcust_pwr_cfg->sensor_idx != i &&
 		       pcust_pwr_cfg->sensor_idx != IMGSENSOR_SENSOR_IDX_NONE)
 			pcust_pwr_cfg++;
@@ -135,25 +146,30 @@ static enum IMGSENSOR_RETURN imgsensor_hw_power_sequence(
 	ppwr_info = ppwr_seq->pwr_info;
 
 	while (ppwr_info->pin != IMGSENSOR_HW_PIN_NONE &&
-	       ppwr_info < ppwr_seq->pwr_info + IMGSENSOR_HW_POWER_INFO_MAX) {
-
+		ppwr_info < ppwr_seq->pwr_info + IMGSENSOR_HW_POWER_INFO_MAX) {
 		if (pwr_status == IMGSENSOR_HW_POWER_STATUS_ON) {
 			if (ppwr_info->pin != IMGSENSOR_HW_PIN_UNDEF) {
-				pdev =
-				phw->pdev[psensor_pwr->id[ppwr_info->pin]];
+				#ifdef VENDOR_EDIT
+				if (Oplusimgsensor_ldo_powerset(sensor_idx, ppwr_info->pin, pwr_status)
+						== IMGSENSOR_RETURN_ERROR) {
+				#endif
+					pdev =
+					phw->pdev[psensor_pwr->id[ppwr_info->pin]];
 
-				if (__ratelimit(&ratelimit))
-					PK_DBG(
-					"sensor_idx %d, ppwr_info->pin %d, ppwr_info->pin_state_on %d, delay %u",
-					sensor_idx,
-					ppwr_info->pin,
-					ppwr_info->pin_state_on,
-					ppwr_info->pin_on_delay);
+					if (__ratelimit(&ratelimit))
+						pr_info(
+						"sensor_idx %d, ppwr_info->pin %d, ppwr_info->pin_state_on %d",
+						sensor_idx,
+						ppwr_info->pin,
+						ppwr_info->pin_state_on);
 
-				if (pdev->set != NULL)
-					pdev->set(pdev->pinstance,
-					sensor_idx,
-				    ppwr_info->pin, ppwr_info->pin_state_on);
+					if (pdev->set != NULL)
+						pdev->set(pdev->pinstance,
+						sensor_idx,
+						ppwr_info->pin, ppwr_info->pin_state_on);
+				#ifdef VENDOR_EDIT
+				}
+				#endif
 			}
 
 			mdelay(ppwr_info->pin_on_delay);
@@ -169,21 +185,28 @@ static enum IMGSENSOR_RETURN imgsensor_hw_power_sequence(
 			pin_cnt--;
 
 			if (__ratelimit(&ratelimit))
-				PK_DBG(
-				"sensor_idx %d, ppwr_info->pin %d, ppwr_info->pin_state_off %d, delay %u",
+				pr_info(
+				"sensor_idx %d, ppwr_info->pin %d, ppwr_info->pin_state_off %d",
 				sensor_idx,
 				ppwr_info->pin,
 				ppwr_info->pin_state_off,
 				ppwr_info->pin_on_delay);
 
 			if (ppwr_info->pin != IMGSENSOR_HW_PIN_UNDEF) {
-				pdev =
-				phw->pdev[psensor_pwr->id[ppwr_info->pin]];
+				#ifdef VENDOR_EDIT
+				if (Oplusimgsensor_ldo_powerset(sensor_idx, ppwr_info->pin, pwr_status)
+						== IMGSENSOR_RETURN_ERROR) {
+				#endif
+					pdev =
+					phw->pdev[psensor_pwr->id[ppwr_info->pin]];
 
-				if (pdev->set != NULL)
-					pdev->set(pdev->pinstance,
-					sensor_idx,
-				ppwr_info->pin, ppwr_info->pin_state_off);
+					if (pdev->set != NULL)
+						pdev->set(pdev->pinstance,
+						sensor_idx,
+					ppwr_info->pin, ppwr_info->pin_state_off);
+				#ifdef VENDOR_EDIT
+				}
+				#endif
 			}
 
 			mdelay(ppwr_info->pin_on_delay);
@@ -202,8 +225,11 @@ enum IMGSENSOR_RETURN imgsensor_hw_power(
 	enum IMGSENSOR_SENSOR_IDX sensor_idx = psensor->inst.sensor_idx;
 	char *curr_sensor_name = psensor->inst.psensor_list->name;
 	char str_index[LENGTH_FOR_SNPRINTF];
-
-	PK_DBG("sensor_idx %d, power %d curr_sensor_name %s, enable list %s\n",
+	#ifdef VENDOR_EDIT
+	/*Henry.Chang@Camera.Drv add for hwcfg MIPISWITCH 20200728*/
+	struct IMGSENSOR_HW_POWER_SEQ *ppwr_seq = NULL;
+	#endif
+	pr_info("sensor_idx %d, power %d curr_sensor_name %s, enable list %s\n",
 		sensor_idx,
 		pwr_status,
 		curr_sensor_name,
@@ -221,6 +247,30 @@ enum IMGSENSOR_RETURN imgsensor_hw_power(
 		ret = IMGSENSOR_RETURN_ERROR;
 		return ret;
 	}
+	#ifdef VENDOR_EDIT
+	/*Henry.Chang@Camera.Drv add for hwcfg MIPISWITCH 20200728*/
+	Oplusimgsensor_ldoenable_power(phw, sensor_idx, pwr_status);
+	ppwr_seq = Oplusimgsensor_matchhwcfg_power(IMGSENSOR_POWER_MATCHMIPI_HWCFG_INDEX);
+	if (ppwr_seq != NULL) {
+		imgsensor_hw_power_sequence(
+			phw,
+			sensor_idx,
+			pwr_status,
+			ppwr_seq,
+			str_index);
+	}
+
+	/*Henry.Chang@Camera.Drv add for hwcfg SENSOR 20200727*/
+	ppwr_seq = Oplusimgsensor_matchhwcfg_power(IMGSENSOR_POWER_MATCHSENSOR_HWCFG_INDEX);
+	if (ppwr_seq != NULL) {
+		imgsensor_hw_power_sequence(
+			phw,
+			sensor_idx,
+			pwr_status,
+			ppwr_seq,
+			curr_sensor_name);
+	}
+	#else
 	imgsensor_hw_power_sequence(
 			phw,
 			sensor_idx,
@@ -232,6 +282,7 @@ enum IMGSENSOR_RETURN imgsensor_hw_power(
 			phw,
 			sensor_idx,
 			pwr_status, sensor_power_sequence, curr_sensor_name);
+	#endif
 
 	return IMGSENSOR_RETURN_SUCCESS;
 }

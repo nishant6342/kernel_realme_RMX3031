@@ -766,14 +766,27 @@ int ion_device_destroy_heaps(struct ion_device *dev)
 {
 	struct ion_heap *heap, *tmp;
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	down_write(&dev->heap_lock);
+#else
 	down_write(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 
 	plist_for_each_entry_safe(heap, tmp, &dev->heaps, node) {
 		plist_del((struct plist_node *)heap, &dev->heaps);
 		ion_mtk_heap_destroy(heap);
 	}
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device 
+ */
+	up_write(&dev->heap_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	up_write(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 
 	return 0;
 }
@@ -789,7 +802,13 @@ static int ion_clients_summary_show(struct seq_file *s, void *unused)
 	enum mtk_ion_heap_type cam_heap = ION_HEAP_TYPE_MULTIMEDIA_FOR_CAMERA;
 	enum mtk_ion_heap_type mm_heap = ION_HEAP_TYPE_MULTIMEDIA;
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	if (!down_read_trylock(&dev->client_lock))
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	if (!down_read_trylock(&dev->lock))
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 		return 0;
 	seq_printf(s, "%-16.s %-8.s %-8.s\n", "client_name", "pid", "size");
 	seq_puts(s, "------------------------------------------\n");
@@ -823,7 +842,13 @@ static int ion_clients_summary_show(struct seq_file *s, void *unused)
 	}
 
 	seq_puts(s, "-------------------------------------------\n");
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	up_read(&dev->client_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	up_read(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 
 	return 0;
 }

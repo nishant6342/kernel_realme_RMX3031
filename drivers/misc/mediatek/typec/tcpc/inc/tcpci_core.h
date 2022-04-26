@@ -176,6 +176,7 @@ struct tcpc_desc {
 #define TCPC_FLAGS_WATCHDOG_EN			(1<<8)
 #define TCPC_FLAGS_WATER_DETECTION		(1<<9)
 #define TCPC_FLAGS_CABLE_TYPE_DETECTION		(1<<10)
+#define TCPC_FLAGS_VCONN_SAFE5V_ONLY		(1<<11)
 
 enum tcpc_cc_pull {
 	TYPEC_CC_RA = 0,
@@ -354,6 +355,10 @@ struct tcpc_device {
 	/* For TCPC TypeC */
 	uint8_t typec_state;
 	uint8_t typec_role;
+	#ifdef OPLUS_FEATURE_CHG_BASIC
+	//add by tongfeng
+	uint8_t typec_role_new;
+	#endif
 	uint8_t typec_attach_old;
 	uint8_t typec_attach_new;
 	uint8_t typec_local_cc;
@@ -505,6 +510,9 @@ struct tcpc_device {
 
 	/* TypeC Shield Protection */
 #ifdef CONFIG_WATER_DETECTION
+#ifdef VENDOR_EDIT
+        bool wd_already;
+#endif
 	int usbid_calib;
 #endif /* CONFIG_WATER_DETECTION */
 #ifdef CONFIG_CABLE_TYPE_DETECTION

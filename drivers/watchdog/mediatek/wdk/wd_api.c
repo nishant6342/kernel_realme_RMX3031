@@ -688,6 +688,23 @@ void arch_reset(char mode, const char *cmd)
 		reboot = WD_SW_RESET_BYPASS_PWR_KEY;
 	} else if (cmd && !strcmp(cmd, "kpoc")) {
 		rtc_mark_kpoc();
+#ifdef VENDOR_EDIT
+	}else if (cmd && !strcmp(cmd, "silence")) {
+		oppo_rtc_mark_silence();
+		reboot = 1;
+	}else if (cmd && !strcmp(cmd, "sau")) {
+		oppo_rtc_mark_sau();
+	}else if (cmd && !strcmp(cmd, "meta")) {
+		oppo_rtc_mark_meta();
+	} else if (cmd && !strcmp(cmd, "ftm")) {
+		oppo_rtc_mark_factory();
+	} else if (cmd && !strcmp(cmd, "safe")) {
+		oppo_rtc_mark_safe();
+#ifdef OPLUS_FEATURE_AGINGTEST
+	} else if (cmd && (!strcmp(cmd, "sblmemtest") || !strcmp(cmd, "usermemaging"))) {
+		oppo_rtc_mark_agingtest();
+#endif /*OPLUS_FEATURE_AGINGTEST */
+#endif
 	} else {
 		reboot = WD_SW_RESET_BYPASS_PWR_KEY;
 	}

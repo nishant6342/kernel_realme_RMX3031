@@ -258,6 +258,10 @@ static inline struct mtk_disp_rdma *comp_to_rdma(struct mtk_ddp_comp *comp)
 	return container_of(comp, struct mtk_disp_rdma, ddp_comp);
 }
 
+//#ifdef OPLUS_FEATURE_ONSCREENFINGERPRINT
+extern int hbm_eof_flag;
+extern void fingerprint_send_notify(unsigned int fingerprint_op_mode);
+//#endif
 static irqreturn_t mtk_disp_rdma_irq_handler(int irq, void *dev_id)
 {
 	struct mtk_disp_rdma *priv = dev_id;
@@ -300,6 +304,22 @@ static irqreturn_t mtk_disp_rdma_irq_handler(int irq, void *dev_id)
 		DDPIRQ("[IRQ] %s: reg update done!\n", mtk_dump_comp_str(rdma));
 
 	if (val & (1 << 2)) {
+		//#ifdef OPLUS_FEATURE_ONSCREENFINGERPRINT
+		/*static unsigned int prev_fp_idx = 0;
+		unsigned int fp_idx = 0;
+		struct cmdq_pkt_buffer *qbuf = &rdma->mtk_crtc->gce_obj.buf;
+
+		fp_idx = *(unsigned int *)(qbuf->va_base + DISP_SLOT_FP1_IDX);
+		DDPPR_ERR("%s: prev_fp_idx:%u, fp_idx:%u\n", __func__,
+		       prev_fp_idx, fp_idx);
+		if (fp_idx > prev_fp_idx) {
+			prev_fp_idx = fp_idx;
+			//TODO: implement by customer
+			fingerprint_send_notify(1);
+			DDPPR_ERR("%s: send uiready to fp\n",__func__);
+		}*/
+
+		//#endif
 		set_swpm_disp_work(); /* counting fps for swpm */
 		if (rdma->id == DDP_COMPONENT_RDMA0)
 			DRM_MMP_EVENT_END(rdma0, val, 0);
@@ -320,6 +340,12 @@ static irqreturn_t mtk_disp_rdma_irq_handler(int irq, void *dev_id)
 		if (rdma->id == DDP_COMPONENT_RDMA0)
 			DRM_MMP_EVENT_START(rdma0, val, 0);
 		DDPIRQ("[IRQ] %s: frame start!\n", mtk_dump_comp_str(rdma));
+		//#ifdef OPLUS_FEATURE_ONSCREENFINGERPRINT
+		if(hbm_eof_flag){
+			fingerprint_send_notify(0);
+			hbm_eof_flag = 0;
+		}
+		//#endif
 		mtk_drm_refresh_tag_start(&priv->ddp_comp);
 		MMPathTraceDRM(rdma);
 
@@ -569,8 +595,14 @@ void mtk_rdma_cal_golden_setting(struct mtk_ddp_comp *comp,
 	/* DISP_RDMA_FIFO_CON */
 	if (gsc->is_vdo_mode)
 		gs[GS_RDMA_OUTPUT_VALID_FIFO_TH] = 0;
-	else
-		gs[GS_RDMA_OUTPUT_VALID_FIFO_TH] = gs[GS_RDMA_PRE_ULTRA_TH_LOW];
+	else {
+		struct mtk_panel_params *panel_ext =
+			mtk_drm_get_lcm_ext_params(&comp->mtk_crtc->base);
+		if (panel_ext &&  panel_ext->output_mode == MTK_PANEL_DSC_SINGLE_PORT)
+			gs[GS_RDMA_OUTPUT_VALID_FIFO_TH] = 0;
+        else
+            gs[GS_RDMA_OUTPUT_VALID_FIFO_TH] = gs[GS_RDMA_PRE_ULTRA_TH_LOW];
+	}
 	gs[GS_RDMA_FIFO_SIZE] = fifo_size;
 	gs[GS_RDMA_FIFO_UNDERFLOW_EN] = 0;
 

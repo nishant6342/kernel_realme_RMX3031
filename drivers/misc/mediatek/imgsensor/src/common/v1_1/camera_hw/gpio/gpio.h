@@ -67,6 +67,7 @@ struct GPIO {
 	struct pinctrl_state *ppinctrl_state_switch[
 		GPIO_CTRL_STATE_MAX_NUM_SWITCH];
 #endif
+        struct pinctrl_state *pinctrl_state_ldo_enable;
 	struct mutex         *pgpio_mutex;
 };
 

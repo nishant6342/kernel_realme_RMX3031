@@ -54,6 +54,12 @@
 #include "mtk_disp_gamma.h"
 #include "mtk_disp_aal.h"
 #include "mtk_drm_mmp.h"
+
+#ifdef VENDOR_EDIT
+#include <mt-plat/mtk_boot_common.h>
+extern unsigned long silence_mode;
+#endif
+
 /* *******Panel Master******** */
 #include "mtk_fbconfig_kdebug.h"
 #ifdef CONFIG_MTK_HDMI_SUPPORT
@@ -89,8 +95,7 @@ struct lcm_fps_ctx_t lcm_fps_ctx[MAX_CRTC];
 static int manual_shift;
 static bool no_shift;
 
-int mtk_atoi(const char *str)
-{
+int mtk_atoi(const char *str){
 	int len = strlen(str);
 	int num = 0, i = 0;
 	int sign = (str[0] == '-') ? -1 : 1;
@@ -136,7 +141,6 @@ void disp_drm_debug(const char *opt)
 			no_shift);
 	}
 }
-
 
 static inline struct mtk_atomic_state *to_mtk_state(struct drm_atomic_state *s)
 {
@@ -267,11 +271,11 @@ static void mtk_atomic_rsz_calc_dual_params(
 		tile_idx = 1;
 	else
 		is_dual = true;
-
 	DDPINFO("%s :loss:%d,idx:%d,width:%d,src_w:%d,dst_w:%d,src_x:%d\n", __func__,
-	       tile_loss, tile_idx, width, src_roi->width, dst_roi->width, src_roi->x);
+		tile_loss, tile_idx, width, src_roi->width, dst_roi->width, src_roi->x);
 	step = (UNIT * (src_roi->width - 1) + (dst_roi->width - 2)) /
 			(dst_roi->width - 1); /* for ceil */
+
 	offset[0] = (step * (dst_roi->width - 1) -
 		UNIT * (src_roi->width - 1)) / 2;
 	init_phase = UNIT - offset[0];
@@ -288,7 +292,7 @@ static void mtk_atomic_rsz_calc_dual_params(
 
 	if (is_dual) {
 		/*left side*/
-		/*right bound - left bound + tile loss*/
+        /*right bound - left bound + tile loss*/
 		tile_in_len[0] = (((width / 2) * src_roi->width * 10) /
 			dst_roi->width + 5) / 10 - src_roi->x + tile_loss;
 		tile_out_len[0] = width / 2 - dst_roi->x;
@@ -308,7 +312,7 @@ static void mtk_atomic_rsz_calc_dual_params(
 	param[tile_idx].sub_offset = (u32)(sub_offset[0] & 0x1fffff);
 	param[tile_idx].in_len = tile_in_len[0];
 	param[tile_idx].out_len = tile_out_len[0];
-	DDPINFO("%s,%d :%s:step:%u,offset:%u.%u,len:%u->%u,out_x:%u\n", __func__, __LINE__,
+    DDPINFO("%s,%d :%s:step:%u,offset:%u.%u,len:%u->%u,out_x:%u\n", __func__, __LINE__,
 	       is_dual ? "dual" : "single",
 	       param[0].step,
 	       param[0].int_offset,
@@ -320,30 +324,30 @@ static void mtk_atomic_rsz_calc_dual_params(
 	if (!is_dual)
 		return;
 
-	/* right half */
-	tile_out_len[1] = dst_roi->width - tile_out_len[0];
-	tile_in_len[1] = ((tile_out_len[1] * src_roi->width * 10) /
-		dst_roi->width + 5) / 10 + tile_loss + (offset[0] ? 1 : 0);
-
-	offset[1] = (-offset[0]) + (tile_out_len[0] * step) -
-			(src_roi->width - tile_in_len[1]) * UNIT + manual_shift;
-	/*
-	 * offset[1] = (init_phase + dst_roi->width / 2 * step) -
-	 *	(src_roi->width / 2 - tile_loss - (offset[0] ? 1 : 0) + 1) * UNIT +
-	 *	UNIT + manual_shift;
-	 */
-	if (no_shift)
-		offset[1] = 0;
-	DDPINFO("%s,in_ph:%d,man_sh:%d,off[1]:%d\n", __func__, init_phase, manual_shift, offset[1]);
-	int_offset[1] = offset[1] / UNIT;
-	sub_offset[1] = offset[1] - UNIT * int_offset[1];
-	/*
-	if (int_offset[1] & 0x1) {
-		int_offset[1]++;
-		tile_in_len[1]++;
-		DDPINFO("%s :right tile int_offset: make odd to even\n", __func__);
-	}
-	*/
+     /* right half */
+    tile_out_len[1] = dst_roi->width - tile_out_len[0];
+     tile_in_len[1] = ((tile_out_len[1] * src_roi->width * 10) /
+                       dst_roi->width + 5) / 10 + tile_loss + (offset[0] ? 1 : 0);
+ 
+    offset[1] = (-offset[0]) + (tile_out_len[0] * step) -
+            (src_roi->width - tile_in_len[1]) * UNIT + manual_shift;
+    /*
+     * offset[1] = (init_phase + dst_roi->width / 2 * step) -
+     *    (src_roi->width / 2 - tile_loss - (offset[0] ? 1 : 0) + 1) * UNIT +
+     *    UNIT + manual_shift;
+     */
+    if (no_shift)
+        offset[1] = 0;
+    DDPINFO("%s,in_ph:%d,man_sh:%d,off[1]:%d\n", __func__, init_phase, manual_shift, offset[1]);
+    int_offset[1] = offset[1] / UNIT;
+    sub_offset[1] = offset[1] - UNIT * int_offset[1];
+    /*
+     if (int_offset[1] & 0x1) {
+         int_offset[1]++;
+         tile_in_len[1]++;
+        DDPINFO("%s :right tile int_offset: make odd to even\n", __func__);
+     }
+    */
 	param[1].step = step;
 	param[1].out_x = 0;
 	param[1].int_offset = (u32)(int_offset[1] & 0xffff);
@@ -351,7 +355,7 @@ static void mtk_atomic_rsz_calc_dual_params(
 	param[1].in_len = tile_in_len[1];
 	param[1].out_len = tile_out_len[1];
 
-	DDPINFO("%s,%d :%s:step:%u,offset:%u.%u,len:%u->%u,out_x:%u\n", __func__, __LINE__,
+    DDPINFO("%s,%d :%s:step:%u,offset:%u.%u,len:%u->%u,out_x:%u\n", __func__, __LINE__,
 	       is_dual ? "dual" : "single",
 	       param[1].step,
 	       param[1].int_offset,
@@ -581,7 +585,6 @@ static void mtk_atomic_force_doze_switch(struct drm_device *dev,
 	funcs = encoder->helper_private;
 
 	panel_funcs = mtk_drm_get_lcm_ext_funcs(crtc);
-	mtk_drm_idlemgr_kick(__func__, crtc, false);
 	if (panel_funcs && panel_funcs->doze_get_mode_flags) {
 		/* blocking flush before stop trigger loop */
 		mtk_crtc_pkt_create(&handle, &mtk_crtc->base,
@@ -3129,7 +3132,6 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	struct component_match *match = NULL;
 	int ret;
 	int i;
-
 	disp_dbg_probe();
 	PanelMaster_probe();
 	DDPINFO("%s+\n", __func__);
@@ -3308,6 +3310,16 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	DDPINFO("%s-\n", __func__);
 
 	disp_dts_gpio_init(dev, private);
+
+//#ifdef OPLUS_FEATURE_SILENCEMODE
+	if ((get_boot_mode() == SILENCE_BOOT)
+			||(get_boot_mode() == OPPO_SAU_BOOT) || get_oppo_boot_mode() == OPPO_SILENCE_BOOT)
+	{
+		printk("%s OPPO_SILENCE_BOOT set silence_mode to 1\n", __func__);
+		silence_mode = 1;
+	}
+//#endif
+
 #ifdef CONFIG_MTK_IOMMU_V2
 	memcpy(&mydev, pdev, sizeof(mydev));
 #endif

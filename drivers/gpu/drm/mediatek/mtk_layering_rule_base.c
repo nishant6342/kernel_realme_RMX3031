@@ -1662,13 +1662,14 @@ static void clear_layer(struct drm_mtk_layering_info *disp_info)
 		else
 			c->layer_caps |= MTK_DISP_CLIENT_CLEAR_LAYER;
 
-		if ((c->src_width < c->dst_width &&
+		/*if ((c->src_width < c->dst_width &&
 		     c->src_height < c->dst_height) &&
 		     get_layering_opt(LYE_OPT_RPO) &&
 		    top < disp_info->gles_tail[di]) {
 			c->layer_caps |= MTK_DISP_RSZ_LAYER;
 			l_rule_info->addon_scn[di] = ONE_SCALING;
-		} else {
+		} else {*/
+		{
 			c->layer_caps &= ~MTK_DISP_RSZ_LAYER;
 			l_rule_info->addon_scn[di] = NONE;
 
@@ -2291,28 +2292,28 @@ static int check_cross_pipe_rpo(
 		   param[0].out_len,
 		   param[0].out_x);
 
-	/* right half */
-	tile_out_len[1] = dst_w - tile_out_len[0];
-	tile_in_len[1] = ((tile_out_len[1] * src_w * 10) /
-		dst_w + 5) / 10 + tile_loss + (offset[0] ? 1 : 0);
-
-	offset[1] = (-offset[0]) + (tile_out_len[0] * step) -
-			(src_w - tile_in_len[1]) * UNIT;
-	/*
-	 * offset[1] = (init_phase + dst_w / 2 * step) -
-	 *	(src_w / 2 - tile_loss - (offset[0] ? 1 : 0) + 1) * UNIT +
-	 *	UNIT;
-	 */
-	DDPINFO("HRT %s,in_ph:%d,off[1]:%d\n", __func__, init_phase, offset[1]);
-	int_offset[1] = offset[1] / UNIT;
-	sub_offset[1] = offset[1] - UNIT * int_offset[1];
-	/*
-	if (int_offset[1] & 0x1) {
-		int_offset[1]++;
-		tile_in_len[1]++;
-		DDPINFO("HRT right tile int_offset: make odd to even\n");
-	}
-	*/
+     /* right half */
+    tile_out_len[1] = dst_w - tile_out_len[0];
+     tile_in_len[1] = ((tile_out_len[1] * src_w * 10) /
+        dst_w + 5) / 10 + tile_loss + (offset[0] ? 1 : 0);
+ 
+    offset[1] = (-offset[0]) + (tile_out_len[0] * step) -
+            (src_w - tile_in_len[1]) * UNIT;
+    /*
+     * offset[1] = (init_phase + dst_w / 2 * step) -
+     *    (src_w / 2 - tile_loss - (offset[0] ? 1 : 0) + 1) * UNIT +
+     *    UNIT;
+     */
+    DDPINFO("HRT %s,in_ph:%d,off[1]:%d\n", __func__, init_phase, offset[1]);
+    int_offset[1] = offset[1] / UNIT;
+    sub_offset[1] = offset[1] - UNIT * int_offset[1];
+    /*
+     if (int_offset[1] & 0x1) {
+         int_offset[1]++;
+         tile_in_len[1]++;
+         DDPINFO("HRT right tile int_offset: make odd to even\n");
+     }
+    */
 	param[1].step = step;
 	param[1].out_x = 0;
 	param[1].int_offset = (u32)(int_offset[1] & 0xffff);
@@ -2420,6 +2421,8 @@ static int RPO_rule(struct drm_crtc *crtc,
 				dst_roi.width, dst_roi.height);
 			break;
 		}
+		if (c->layer_caps & MTK_LAYERING_OVL_ONLY)
+			break;
 
 		if (!is_layer_across_each_pipe(crtc, c))
 			break;

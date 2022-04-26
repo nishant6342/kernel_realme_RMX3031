@@ -155,6 +155,12 @@ struct scp_region_info_st {
 	uint32_t scpctl;
 	uint32_t regdump_start;
 	uint32_t regdump_size;
+//#ifdef VENDOR_EDIT
+	uint32_t nOperator;
+	uint32_t nPCBVersion;
+	uint32_t nProject;
+	uint32_t sensor_data_addr;
+//#endif
 };
 
 /* scp device attribute */

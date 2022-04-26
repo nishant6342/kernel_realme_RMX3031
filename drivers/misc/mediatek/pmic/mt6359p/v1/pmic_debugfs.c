@@ -240,6 +240,8 @@ void pmic_dump_register(struct seq_file *m)
 			  , i + 6, upmu_get_reg_value(i + 6)
 			  , i + 8, upmu_get_reg_value(i + 8));
 		if (m != NULL) {
+//#ifdef VENDOR_EDIT
+/*
 			seq_printf(m,
 				"Reg[0x%x]=0x%x Reg[0x%x]=0x%x Reg[0x%x]=0x%x Reg[0x%x]=0x%x Reg[0x%x]=0x%x\n"
 				, i, upmu_get_reg_value(i)
@@ -247,6 +249,8 @@ void pmic_dump_register(struct seq_file *m)
 				, i + 4, upmu_get_reg_value(i + 4)
 				, i + 6, upmu_get_reg_value(i + 6)
 				, i + 8, upmu_get_reg_value(i + 8));
+*/
+//#endif
 		}
 	}
 }

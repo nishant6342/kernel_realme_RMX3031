@@ -271,6 +271,72 @@ static const struct mtk_lp_sysfs_op mtk_dbg_spm_system_stats_fops = {
 	.fs_read = mtk_dbg_get_system_stats,
 };
 
+#ifdef VENDOR_EDIT
+static ssize_t get_oppo_rpm_stats(char *ToUserBuf,
+			  size_t sz, void *priv)
+{
+	/* dump sleep info */
+#if defined(CONFIG_MTK_ECCCI_DRIVER)
+	u32 len = 0;
+	u32 *share_mem = NULL;
+	struct md_sleep_status md_data;
+
+	share_mem = (u32 *)get_smem_start_addr(MD_SYS1,
+		SMEM_USER_LOW_POWER, NULL);
+	share_mem = share_mem + MD_SLEEP_INFO_SMEM_OFFEST;
+	memset(&md_data, 0, sizeof(struct md_sleep_status));
+	memcpy(&md_data, share_mem, sizeof(struct md_sleep_status));
+
+	len = snprintf(ToUserBuf, sz,
+	//"vmin:%x:%llx\r\n",
+	"vmin:%x:%llx\n",
+	spm_26M_off_count,
+	PCM_TICK_TO_MILLI_SEC(spm_26M_off_duration)
+	);
+
+	return (len > sz) ? sz : len;
+#else
+	return 0;
+#endif
+}
+
+static const struct mtk_lp_sysfs_op oppo_rpm_stats_fops = {
+	.fs_read = get_oppo_rpm_stats,
+};
+
+static ssize_t get_oppo_rpm_master_stats(char *ToUserBuf,
+			  size_t sz, void *priv)
+{
+	/* dump sleep info */
+#if defined(CONFIG_MTK_ECCCI_DRIVER)
+	u32 len = 0;
+	u32 *share_mem = NULL;
+	struct md_sleep_status md_data;
+
+	share_mem = (u32 *)get_smem_start_addr(MD_SYS1,
+		SMEM_USER_LOW_POWER, NULL);
+	share_mem = share_mem + MD_SLEEP_INFO_SMEM_OFFEST;
+	memset(&md_data, 0, sizeof(struct md_sleep_status));
+	memcpy(&md_data, share_mem, sizeof(struct md_sleep_status));
+
+	len = snprintf(ToUserBuf, sz,
+	 "APSS:%x:%llx\nMPSS:%x:%llx\n",
+	ap_pd_count,
+	PCM_TICK_TO_MILLI_SEC(ap_slp_duration),
+	md_data.sleep_cnt,
+	PCM_TICK_TO_MILLI_SEC(md_data.sleep_time));
+
+	return (len > sz) ? sz : len;
+#else
+	return 0;
+#endif
+}
+
+static const struct mtk_lp_sysfs_op oppo_rpm_master_stats_fops = {
+	.fs_read = get_oppo_rpm_master_stats,
+};
+#endif
+
 static void mtk_dbg_spm_fs_init(void)
 {
 	mtk_spm_sysfs_root_entry_create();
@@ -283,6 +349,12 @@ static void mtk_dbg_spm_fs_init(void)
 			, &mtk_dbg_spm_spmfw_ver_fops, NULL);
 	mtk_spm_sysfs_entry_node_add("system_stats", 0444
 			, &mtk_dbg_spm_system_stats_fops, NULL);
+	#ifdef VENDOR_EDIT
+	mtk_spm_sysfs_entry_node_add("oplus_rpmh_stats", 0444
+			, &oppo_rpm_stats_fops, NULL);
+	mtk_spm_sysfs_entry_node_add("oplus_rpmh_master_stats", 0444
+			, &oppo_rpm_master_stats_fops, NULL);
+	#endif
 }
 
 static bool mtk_system_console_suspend;
