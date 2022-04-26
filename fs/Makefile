@@ -129,8 +129,17 @@ obj-$(CONFIG_TRACING)		+= tracefs/
 obj-$(CONFIG_OCFS2_FS)		+= ocfs2/
 obj-$(CONFIG_BTRFS_FS)		+= btrfs/
 obj-$(CONFIG_GFS2_FS)           += gfs2/
+ifeq ($(CONFIG_OPLUS_FEATURE_OF2FS),y)
+obj-$(CONFIG_F2FS_FS)		+= of2fs/
+else
 obj-$(CONFIG_F2FS_FS)		+= f2fs/
+endif
 obj-y				+= exofs/ # Multiple modules
 obj-$(CONFIG_CEPH_FS)		+= ceph/
 obj-$(CONFIG_PSTORE)		+= pstore/
 obj-$(CONFIG_EFIVAR_FS)		+= efivarfs/
+obj-$(CONFIG_EXFAT_FS)		+= exfat/
+
+#ifdef VENDOR_EDIT
+obj-$(CONFIG_EXFAT_FS)		+= exfat/
+#endif /*VENDOR_EDIT*/

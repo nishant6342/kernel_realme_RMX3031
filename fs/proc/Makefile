@@ -33,3 +33,11 @@ proc-$(CONFIG_PROC_KCORE)	+= kcore.o
 proc-$(CONFIG_PROC_VMCORE)	+= vmcore.o
 proc-$(CONFIG_PRINTK)	+= kmsg.o
 proc-$(CONFIG_PROC_PAGE_MONITOR)	+= page.o
+proc-y += devinfo.o
+#ifdef VENDOR_EDIT
+proc-y	+= task_cpustats.o
+#endif /* VENDOR_EDIT */
+#ifdef VENDOR_EDIT
+obj-y	+= oppo_healthinfo/
+#endif /* VENDOR_EDIT */
+

@@ -32,7 +32,11 @@ source "fs/gfs2/Kconfig"
 source "fs/ocfs2/Kconfig"
 source "fs/btrfs/Kconfig"
 source "fs/nilfs2/Kconfig"
-source "fs/f2fs/Kconfig"
+#ifdef CONFIG_OPLUS_FEATURE_OF2FS
+source "fs/of2fs/Kconfig"
+#else
+#source "fs/f2fs/Kconfig"
+#endif
 
 config FS_DAX
 	bool "Direct Access (DAX) support"
@@ -312,5 +316,9 @@ endif # NETWORK_FILESYSTEMS
 source "fs/nls/Kconfig"
 source "fs/dlm/Kconfig"
 source "fs/unicode/Kconfig"
+
+#ifdef CONFIG_EXFAT_FS
+source "fs/exfat/Kconfig"
+#endif /*CONFIG_EXFAT_FS*/
 
 endmenu

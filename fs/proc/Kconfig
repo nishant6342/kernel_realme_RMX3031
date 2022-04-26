@@ -88,3 +88,7 @@ config PROC_UID
 	depends on PROC_FS && RT_MUTEXES
 	help
 	Provides aggregated per-uid information under /proc/uid.
+	
+#ifdef VENDOR_EDIT
+source fs/proc/oppo_healthinfo/Kconfig
+#endif /*VENDOR_EDIT*/
