@@ -1,0 +1,19 @@
+&odm {
+	oplus_devinfo:oplus_devinfo {
+	compatible = "oppo-devinfo";
+	main-sub {
+		compatible = "hw-match, main-sub";
+		aboard-patterns = <0 0>;
+		/*main board*/
+		match-projects = <20615 20662>;
+	};
+	};
+};
+
+//#endif
+//#ifdef VENDOR_EDIT
+&swtp {
+    compatible = "mediatek, swtp-eint";
+    debounce = <512000>;
+};
+//#endif  /*VENDOR_EDIT*/

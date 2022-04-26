@@ -1,0 +1,17 @@
+&odm {
+	oplus_devinfo:oplus_devinfo {
+	compatible = "oppo-devinfo";
+	main-sub {
+		compatible = "hw-match, main-sub";
+		aboard-patterns = <0 0>;
+		/*main board*/
+		match-projects = <20131 20133>;
+	};
+	};
+};
+//#ifdef OPLUS_FEATURE_CHG_BASIC
+&lk_charger{
+	charger_by_buckboost;
+	support_tuv_authentication;
+};
+//#endif

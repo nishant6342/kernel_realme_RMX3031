@@ -54,7 +54,10 @@
 };
 
 &mmc0 {
-	status = "okay";
+	//#ifdef VENDOR_EDIT
+	//status = "okay";
+	status = "disable";
+	//#end VENDOR_EDIT
 	/* pinctrl-names = "default", "state_uhs"; */
 	/* pinctrl-0 = <&mmc0_pins_default>; */
 	/* pinctrl-1 = <&mmc0_pins_uhs>; */
@@ -119,6 +122,19 @@
 	};
 	usb_c_pinctrl:usb_c_pinctrl {
 		compatible = "mediatek,usb_c_pinctrl";
+	};
+	oplus_project:oplus_project {
+		compatible = "oppo,oplus_project";
+	};
+	oplus_devinfo:oplus_devinfo {
+		compatible = "oppo-devinfo";
+
+		main-sub {
+			compatible = "hw-match, main-sub";
+			aboard-patterns = <0 0 0 0>;
+			/*main board*/
+			//match-projects = <19537 19538 19541 19539>;
+		};
 	};
 };
 
@@ -563,5 +579,5 @@
 
 #include "mediatek/cust_mt6885_touch_1080x2280.dtsi"
 #include "mediatek/cust_mt6885_camera.dtsi"
-#include <k6883v1_64/cust.dtsi>
+#include <oppo6885/cust.dtsi>
 /*End of this file, DO NOT ADD ANYTHING HERE*/

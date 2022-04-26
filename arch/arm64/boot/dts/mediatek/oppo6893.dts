@@ -1,5 +1,5 @@
 /*
- * Mediatek's mt6885 SoC device tree source
+ * Mediatek's mt6893 SoC device tree source
  *
  * Copyright (C) 2016 MediaTek Inc.
  *
@@ -107,7 +107,7 @@
 	};
 	led6:led@6 {
 		compatible = "mediatek,lcd-backlight";
-		led_mode = <5>;
+		led_mode = <4>;
 		data = <1>;
 		pwm_config = <0 1 0 0 0>;
 	};
@@ -532,13 +532,13 @@
 	status = "okay";
 	#address-cells = <1>;
 	#size-cells = <0>;
-	panel@0 {
-		compatible = "truly,td4330,cmd";
+	panel1@0 {
+		compatible = "oppo20615_samsung_ams643ye01_1080p_dsi_cmd";
 		reg = <0>;
 		pm-enable-gpios = <&pio 41 0>;
 		reset-gpios = <&pio 42 0>;
-		bias-gpios = <&pio 28 0>,
-			<&pio 29 0>;
+		bias-gpios = <&pio 29 0>;
+		ldo3-supply = <&mt_pmic_vmc_ldo_reg>;
 		pinctrl-names = "default";
 		port {
 			panel_in: endpoint {
@@ -557,11 +557,12 @@
 
 /* CAMERA specify sensor */
 &kd_camera_hw1 {
-	cam2_enable_sensor = "imx350_mipi_raw imx386_mipi_mono imx319_mipi_raw";
+	cam2_enable_sensor = "imx586_mipi_raw s5k3m5sx_mipi_raw";
+	cam4_enable_sensor = "imx586_mipi_raw imx481_mipi_raw";
 };
 /* CAMERA specify sensor end */
 
-#include "mediatek/cust_mt6885_touch_1080x2280.dtsi"
+#include "mediatek/cust_mt6893_touch_1080x2300.dtsi"
 #include "mediatek/cust_mt6885_camera.dtsi"
-#include <k6885v1_64/cust.dtsi>
+#include <oppo6893/cust.dtsi>
 /*End of this file, DO NOT ADD ANYTHING HERE*/
