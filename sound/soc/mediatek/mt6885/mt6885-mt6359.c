@@ -24,6 +24,11 @@
  */
 #define EXT_SPK_AMP_W_NAME "Ext_Speaker_Amp"
 
+#ifdef OPLUS_ARCH_EXTENDS
+extern void extend_codec_i2s_be_dailinks(struct snd_soc_dai_link *dailink, size_t size);
+extern bool extend_codec_i2s_compare(struct snd_soc_dai_link *dailink, int dailink_num);
+#endif
+
 static const char *const mt6885_spk_type_str[] = {MTK_SPK_NOT_SMARTPA_STR,
 						  MTK_SPK_RICHTEK_RT5509_STR,
 						  MTK_SPK_MEDIATEK_MT6660_STR,
@@ -1218,11 +1223,20 @@ static int mt6885_mt6359_dev_probe(struct platform_device *pdev)
 			"Property 'audio-codec' missing or invalid\n");
 		return -EINVAL;
 	}
+
+#ifdef VENDOR_EDIT
+	extend_codec_i2s_be_dailinks(mt6885_mt6359_dai_links, ARRAY_SIZE(mt6885_mt6359_dai_links));
+#endif /* VENDOR_EDIT */
+
 	for (i = 0; i < card->num_links; i++) {
 		if (mt6885_mt6359_dai_links[i].codec_name ||
 		    i == spk_out_dai_link_idx ||
 		    i == spk_iv_dai_link_idx)
 			continue;
+#ifdef OPLUS_ARCH_EXTENDS
+		if (extend_codec_i2s_compare(mt6885_mt6359_dai_links, i))
+			continue;
+#endif /* VENDOR_EDIT */
 		mt6885_mt6359_dai_links[i].codec_of_node = codec_node;
 	}
 

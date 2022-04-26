@@ -326,6 +326,18 @@ config SND_SOC_MTK_SCP_SMARTPA
 	  Select Y to enable CONFIG_SND_SOC_MTK_SCP_SMARTPA for
 	  speaker protection in SCP.
 
+#ifeq ($(strip $(OPLUS_BUG_STABILITY)),yes)
+# Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine 2019/10/12, MonetX audio sia8108 bringup
+config SND_SIA81XX_PA
+	bool "Silicon SIA8101 PA"
+	help
+	  SIA8101 provides on-chip speaker excursion protection,
+	  a signal magnitude controller for clipping avoidance
+	  and speaker temperature protection.
+	  Select Y to enable CONFIG_SND_SIA81XX_PA for adding
+	  Silicon SIA8101 PA.
+#endif # OPLUS_BUG_STABILITY
+
 config MTK_SND_SOC_NEW_ARCH
 	bool "Support new audio architecture"
 	select REGMAP_MMIO
@@ -354,3 +366,28 @@ config SND_SOC_MTK_AUDIO_DSP
 	  that can be used with other platforms
 	  Select Y if you have such device.
 	  If unsure select "N".
+
+config MTK_FSA4480_I2C
+	bool "Support fsa4480 switch"
+	default n
+	help
+	  This adds fsa4480 driver for Mediatek boards
+	  that can be used with other platforms
+	  Select Y if you have such device.
+	  If unsure select "N".
+
+#ifdef OPLUS_BUG_STABILITY
+# wuhui@ODM.CM.Multimedia.Audio 2020/09/08 added for aw87339 bringup
+config SND_SOC_AW87339
+	tristate "SoC Audio for awinic AW87339 Smart K PA"
+	depends on I2C
+	help
+	This option enables support for AW87339 Smart K PA.
+
+# wuhui@ODM.CM.Multimedia.Audio 2020/09/08 added for aw87359 bringup
+config SND_SOC_AW87359
+	tristate "SoC Audio for awinic AW87359 Smart K PA"
+	depends on I2C
+	help
+	This option enables support for AW87359 Smart K PA.
+#endif /* OPLUS_BUG_STABILITY */

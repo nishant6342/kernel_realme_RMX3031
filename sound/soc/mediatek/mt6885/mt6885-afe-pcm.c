@@ -1568,6 +1568,10 @@ static const struct snd_kcontrol_new memif_ul4_ch1_mix[] = {
 				    I_ADDA_UL_CH1, 1, 0),
 	SOC_DAPM_SINGLE_AUTODISABLE("I2S0_CH1", AFE_CONN38,
 				    I_I2S0_CH1, 1, 0),
+#ifdef OPLUS_BUG_COMPATIBILITY
+	SOC_DAPM_SINGLE_AUTODISABLE("I2S2_CH1", AFE_CONN38,
+				    I_I2S0_CH1, 1, 0),
+#endif
 };
 
 static const struct snd_kcontrol_new memif_ul4_ch2_mix[] = {
@@ -1575,6 +1579,10 @@ static const struct snd_kcontrol_new memif_ul4_ch2_mix[] = {
 				    I_ADDA_UL_CH2, 1, 0),
 	SOC_DAPM_SINGLE_AUTODISABLE("I2S0_CH2", AFE_CONN39,
 				    I_I2S0_CH2, 1, 0),
+#ifdef OPLUS_BUG_COMPATIBILITY
+	SOC_DAPM_SINGLE_AUTODISABLE("I2S2_CH2", AFE_CONN39,
+				    I_I2S0_CH1, 1, 0),
+#endif
 };
 
 static const struct snd_kcontrol_new memif_ul5_ch1_mix[] = {
@@ -1946,6 +1954,16 @@ static const struct snd_soc_dapm_route mt6885_memif_routes[] = {
 
 	{"HW_GAIN2_IN_CH1", "ADDA_UL_CH1", "ADDA_UL_Mux"},
 	{"HW_GAIN2_IN_CH2", "ADDA_UL_CH2", "ADDA_UL_Mux"},
+	#ifdef OPLUS_BUG_COMPATIBILITY
+	{"UL4_CH1", "I2S2_CH1", "I2S2"},
+	{"UL4_CH2", "I2S2_CH2", "I2S2"},
+    #endif
+#ifdef OPLUS_BUG_COMPATIBILITY
+	{"UL1_CH3", "DL4_CH1", "Hostless_UL1 UL"},
+	{"UL1_CH4", "DL4_CH2", "Hostless_UL1 UL"},
+	{"Hostless_UL1 UL", NULL, "UL1_VIRTUAL_INPUT"},
+#endif
+
 };
 
 static const struct mtk_base_memif_data memif_data[MT6885_MEMIF_NUM] = {
