@@ -53,7 +53,7 @@ extern int mtk_nanohub_cfg_to_hub(uint8_t sensor_id, uint8_t *data, uint8_t coun
 #define DEVINFO_LOG(fmt, args...)   pr_err(DEV_TAG"%s %d : "fmt, __func__, __LINE__, ##args)
 
 #define UINT2Ptr(n)     (uint32_t *)(n)
-#define Ptr2UINT32(p)   (uint32_t)(p)
+#define Ptr2UINT32(p)   (uint32_t)(size_t)((void *)(p))
 
 #define IS_SUPPROT_HWCALI           (0x01)
 #define IS_IN_FACTORY_MODE          (0x02)
@@ -993,7 +993,7 @@ int get_msensor_parameter(int num)
     return 0;
 }
 
-void  mag_soft_parameter_init()
+void  mag_soft_parameter_init(void)
 {
     int ret = -1;
     int index = 0;
