@@ -2,14 +2,13 @@
 
 function compile() 
 {
-
 source ~/.bashrc && source ~/.profile
 export LC_ALL=C && export USE_CCACHE=1
 ccache -M 100G
 export ARCH=arm64
-export KBUILD_BUILD_HOST=neolit
-export KBUILD_BUILD_USER="sarthakroy2002"
-git clone --depth=1 https://github.com/sarthakroy2002/android_prebuilts_clang_host_linux-x86_clang-6443078 clang
+export KBUILD_BUILD_HOST=origin
+export KBUILD_BUILD_USER="nishant6342"
+git clone --depth=1 https://github.com/nishant6342/android_prebuilts_clang_host_linux-x86_clang-6443078 clang
 git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 los-4.9-64
 git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 los-4.9-32
 
@@ -29,13 +28,23 @@ make -j$(nproc --all) O=out \
 
 function zupload()
 {
-git clone --depth=1 https://github.com/sarthakroy2002/AnyKernel3.git -b cupida  AnyKernel
+zimage=out/arch/arm64/boot/Image.gz-dtb
+if ! [ -a $zimage ];
+then
+echo  " Failed to compile zImage, fix the errors first "
+else
+echo -e " Build succesful, generating flashable zip now "
+anykernelbin=AnyKernel/anykernel.sh
+if ! [ -a $anykernelbin ]; then git clone --depth=1 https://github.com/nishant6342/AnyKernel3 -b cupida  AnyKernel
+fi
 cp out/arch/arm64/boot/Image.gz-dtb AnyKernel
 cd AnyKernel
-zip -r9 Test-OSS-KERNEL-cupida-NEOLIT.zip *
-#curl --upload-file Test-OSS-KERNEL-cupida-NEOLIT.zip https://transfer.sh/
+zip -r9 ORIGIN-OSS-KERNEL-RMX3031.zip *
+#curl --upload-file ORIGIN-OSS-KERNEL-RMX3031.zip https://transfer.sh/
 curl -sL https://git.io/file-transfer | sh
-./transfer wet Test-OSS-KERNEL-cupida-NEOLIT.zip
+./transfer wet ORIGIN-OSS-KERNEL-RMX3031.zip
+cd ../
+fi
 }
 
 compile
