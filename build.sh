@@ -8,9 +8,15 @@ ccache -M 100G
 export ARCH=arm64
 export KBUILD_BUILD_HOST=origin
 export KBUILD_BUILD_USER="nishant6342"
-git clone --depth=1 https://github.com/nishant6342/android_prebuilts_clang_host_linux-x86_clang-6443078 clang
-git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 los-4.9-64
-git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 los-4.9-32
+clangbin=clang/bin/clang
+if ! [ -a $clangbin ]; then git clone --depth=1 https://github.com/nishant6342/android_prebuilts_clang_host_linux-x86_clang-6443078 clang
+fi
+gcc64bin=los-4.9-64/bin/aarch64-linux-android-as
+if ! [ -a $gcc64bin ]; then git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 los-4.9-64
+fi
+gcc32bin=los-4.9-32/bin/arm-linux-androideabi-as
+if ! [ -a $gcc32bin ]; then git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 los-4.9-32
+fi
 
 [ -d "out" ] && rm -rf out || mkdir -p out
 
