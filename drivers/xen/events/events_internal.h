@@ -67,12 +67,12 @@ struct evtchn_ops {
 	unsigned (*nr_channels)(void);
 
 	int (*setup)(struct irq_info *info);
+	void (*remove)(evtchn_port_t port, unsigned int cpu);
 	void (*bind_to_cpu)(struct irq_info *info, unsigned cpu);
 
 	void (*clear_pending)(unsigned port);
 	void (*set_pending)(unsigned port);
 	bool (*is_pending)(unsigned port);
-	bool (*test_and_set_mask)(unsigned port);
 	void (*mask)(unsigned port);
 	void (*unmask)(unsigned port);
 
@@ -109,6 +109,13 @@ static inline int xen_evtchn_port_setup(struct irq_info *info)
 	return 0;
 }
 
+static inline void xen_evtchn_port_remove(evtchn_port_t evtchn,
+					  unsigned int cpu)
+{
+	if (evtchn_ops->remove)
+		evtchn_ops->remove(evtchn, cpu);
+}
+
 static inline void xen_evtchn_port_bind_to_cpu(struct irq_info *info,
 					       unsigned cpu)
 {
@@ -128,11 +135,6 @@ static inline void set_evtchn(unsigned port)
 static inline bool test_evtchn(unsigned port)
 {
 	return evtchn_ops->is_pending(port);
-}
-
-static inline bool test_and_set_mask(unsigned port)
-{
-	return evtchn_ops->test_and_set_mask(port);
 }
 
 static inline void mask_evtchn(unsigned port)
