@@ -1791,7 +1791,7 @@ static inline void __attribute__((no_sanitize("object-size")))
 	WRITE_ONCE(newsk->prev, prev);
 	WRITE_ONCE(next->prev, newsk);
 	WRITE_ONCE(prev->next, newsk);
-	list->qlen++;
+	WRITE_ONCE(list->qlen, list->qlen + 1);
 }
 
 static inline void __attribute__((no_sanitize("object-size")))
