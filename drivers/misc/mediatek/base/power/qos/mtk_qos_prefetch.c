@@ -185,17 +185,16 @@ int is_qos_prefetch_force(void)
 }
 EXPORT_SYMBOL(is_qos_prefetch_force);
 
+#if defined(CONFIG_MTK_TINYSYS_SSPM_SUPPORT)
 static void qos_prefetch_setting(int cmd, int val)
 {
-#if defined(CONFIG_MTK_TINYSYS_SSPM_SUPPORT)
 	struct qos_ipi_data qos_ipi_d;
 
 	qos_ipi_d.cmd = cmd;
 	qos_ipi_d.u.qos_prefetch_setting.val = val;
 	qos_ipi_to_sspm_command(&qos_ipi_d, 2);
-#endif
 }
-
+#endif
 ssize_t qos_prefetch_setting_get(char *buf)
 {
 	int ret = 0;

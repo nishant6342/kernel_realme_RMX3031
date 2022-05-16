@@ -1062,6 +1062,7 @@ static int parse_reg_val_from_cmd(void __iomem **preg, unsigned long *pval)
 	return r;
 }
 
+#ifdef CONFIG_MTK_ENG_BUILD
 static int clkdbg_reg_read(struct seq_file *s, void *v)
 {
 	void __iomem *reg;
@@ -1128,6 +1129,7 @@ static int clkdbg_reg_clr(struct seq_file *s, void *v)
 
 	return 0;
 }
+#endif //CONFIG_MTK_ENG_BUILD
 
 static int parse_val_from_cmd(unsigned long *pval)
 {
