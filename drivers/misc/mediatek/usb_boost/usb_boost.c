@@ -166,10 +166,14 @@ void usb_boost_set_para_and_arg(int id, int *para, int para_range,
 		__the_boost_ops.boost_by_id[id] = __usb_boost_id_empty;
 }
 
+#ifdef CONFIG_MTK_BOOST
 void usb_boost(void)
 {
 	__the_boost_ops.boost();
 }
+#else
+void usb_boost(void){ return; }
+#endif
 
 void usb_boost_by_id(int id)
 {
@@ -590,8 +594,8 @@ int usb_boost_init(void)
 		boost_inst[id].request_func = __request_it;
 	}
 	/* hook workable interface */
-	__the_boost_ops.boost = __usb_boost;
 	enabled = 1;
+	__the_boost_ops.boost = __usb_boost_empty;
 
 	create_sys_fs();
 	default_setting();
