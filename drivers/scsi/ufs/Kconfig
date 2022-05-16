@@ -119,7 +119,7 @@ config MTK_UFS_SUPPORT
 config MTK_UFS_BLOCK_IO_LOG
 	bool "UFS Block IO log"
 	depends on MTK_BLOCK_TAG && MTK_UFS_SUPPORT
-	default y
+	default n
 	---help---
 	  Enable IO trace for performance analysis and application access
 	  pattern study.
