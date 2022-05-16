@@ -391,4 +391,13 @@ config QORIQ_CPUFREQ
 	  which are capable of changing the CPU's frequency dynamically.
 
 endif
+
+config POWER_LIMIT
+	bool "'power_limit' "
+	help
+	  Power limiter for MTK mt6893 devices. Limit power usage in
+		suspend state and restore settings on resume state. keeps
+		device cooler during suspend by limiting maximum frequency.
+
+	  If in doubt, say N.
 endmenu
