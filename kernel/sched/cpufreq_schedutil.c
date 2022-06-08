@@ -21,6 +21,7 @@
 #include "sched.h"
 #include "tune.h"
 #include "cpufreq_schedutil.h"
+#include "power_limit.h"
 #ifdef OPLUS_FEATURE_UIFIRST
 extern int sysctl_slide_boost_enabled;
 extern int sysctl_uifirst_enabled;
@@ -1338,13 +1339,15 @@ static void sugov_stop(struct cpufreq_policy *policy)
 static void sugov_limits(struct cpufreq_policy *policy)
 {
 	struct sugov_policy *sg_policy = policy->governor_data;
-
+#ifdef CONFIG_POWER_LIMIT
+	policy_apply_limits();
+#else
 	if (!policy->fast_switch_enabled) {
 		mutex_lock(&sg_policy->work_lock);
 		cpufreq_policy_apply_limits(policy);
 		mutex_unlock(&sg_policy->work_lock);
 	}
-
+#endif
 	sg_policy->need_freq_update = true;
 }
 
