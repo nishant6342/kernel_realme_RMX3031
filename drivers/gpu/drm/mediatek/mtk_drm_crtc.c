@@ -6379,7 +6379,7 @@ static void mtk_drm_crtc_atomic_flush(struct drm_crtc *crtc,
 		//unsigned int pf_idx = 0;
 		//struct cmdq_pkt_buffer *cmdq_buf = &mtk_crtc->gce_obj.buf;
 		hbm_en = state->prop_val[CRTC_PROP_HBM_ENABLE];
-		DDPPR_ERR("hbm_en = %d\n", hbm_en);
+		//DDPPR_ERR("hbm_en = %d\n", hbm_en);
 		/* Zhijun.Ye@PSW.MM.Display.LCD.Machine 2020/09/19, add for ramless panel */
 		if (mtk_crtc->panel_ext && mtk_crtc->panel_ext->params
 				&& mtk_crtc->panel_ext->params->oplus_panel_cv_switch) {

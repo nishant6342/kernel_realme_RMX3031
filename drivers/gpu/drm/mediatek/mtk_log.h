@@ -50,13 +50,15 @@ int mtk_dprec_logger_pr(unsigned int type, char *fmt, ...);
 		if (g_mobile_log)                                              \
 			pr_info(pr_fmt(fmt), ##arg);     \
 	} while (0)
-
+#ifdef DEBUG_DISP
 #define DDPMSG(fmt, arg...)                                                    \
 	do {                                                                   \
 		mtk_dprec_logger_pr(DPREC_LOGGER_DEBUG, fmt, ##arg);           \
 		pr_info(pr_fmt(fmt), ##arg);             \
 	} while (0)
-
+#else
+#define DDPMSG(fmt, arg...)
+#endif
 #define DDPDUMP(fmt, arg...)                                                   \
 	do {                                                                   \
 		mtk_dprec_logger_pr(DPREC_LOGGER_DUMP, fmt, ##arg);            \
