@@ -2,7 +2,9 @@
  * @file    power_limit.c
  * @author  Tejas udupa
  * @date    12 May 2022
- * @version 0.1
+ * @version 1.1 - add policy_apply_limits() function which can be used
+ *              to clamp max, min for current policy
+ * 
  * @brief  Frequency control driver, clamps max frequency
  * to profile selected when display is suspended, and
  * releases the clamp when out of suspend. it uses
@@ -21,27 +23,29 @@
 #include "helio-dvfsrc-opp.h"
 #include "mtk_ppm_api.h"
 #include "mtk_perfmgr_internal.h"
-#define LIMITER_OFF 3
-#define LIMITER_H 2
-#define LIMITER_M 1
-#define LIMITER_L 0
+#include "power_limit.h"
 
-static struct kobject *power_limiter_kobj;
-static struct ppm_limit_data *freq_to_set;
-static struct pm_qos_request pm_qos_req;
-static struct pm_qos_request pm_qos_ddr_req;
-static int cluster_num;
-static int power_profile = 1; //Power saver profile 0-Low 1-Mid 2-High 3-Off
-static unsigned int freq_to_hold[3][3] = {  {1725000, 1525000, 1350000},
-                                            {2200000, 1451000, 1162000},
-                                            {2600000, 1482000, 1108000}};
+static bool init_done = 0;
+
+void policy_apply_limits(void)
+{    
+    int i;
+
+    if(!init_done)
+        return;
+
+    for (i = 0; i < cluster_num; i++) {
+        struct cpufreq_policy *policy = cpufreq_cpu_get(cpu_num[i]);
+        freq_to_set[i].min = policy->min;
+        freq_to_set[i].max = policy->max;
+    }
+    pr_debug("%s: cluster:%d freq:%d\n",__func__,cluster_num,freq_to_set);
+    mt_ppm_userlimit_cpu_freq(cluster_num, freq_to_set);
+}
 
 static int freq_hold(void)
 {
     int i,retval;
-
-    if(power_profile >= LIMITER_OFF)
-        return 0;
 
     for (i = 0; i < cluster_num; i++) {
         freq_to_set[i].min = -1;
@@ -103,20 +107,17 @@ static int fb_action(struct notifier_block *self,
         return 0;
 
     blank = *(int *)evdata->data;
-
     switch (blank) {
         /* LCM ON */
         case FB_BLANK_UNBLANK:
             freq_release();
-            if(power_profile == LIMITER_H){
-                core_release();
-                vcorefs_release();
-            }
+    		core_release();
+    		vcorefs_release();
             break;
         /* LCM OFF */
         case FB_BLANK_POWERDOWN:
-            freq_hold();
-            if(power_profile == LIMITER_H){
+            if(enable){    
+                freq_hold();
                 core_hold();
                 vcorefs_hold();
             }
@@ -151,8 +152,22 @@ static ssize_t pwr_prof_store(struct kobject *kobj, struct kobj_attribute *attr,
     return count;
 }
 
+static ssize_t enable_show(struct kobject *kobj, struct kobj_attribute *attr,
+                  char *buf)
+{
+    return sprintf(buf,"%d\n", enable);
+}
+static ssize_t enable_store(struct kobject *kobj, struct kobj_attribute *attr,
+                  const char *buf, size_t count)
+{
+    sscanf(buf,"%d", &enable);
+    return count;
+}
+
 static struct kobj_attribute pwr_mode =
     __ATTR(power_profile, 0644, pwr_prof_show, pwr_prof_store);
+static struct kobj_attribute enable_limiter =
+    __ATTR(enable, 0644, enable_show, enable_store);
 
 /*********************************** sysfs end ***********************************/
 
@@ -187,11 +202,19 @@ static int __init freq_init(void)
         rc = -1;
         goto out;
     }
+    rc = sysfs_create_file(power_limiter_kobj, &enable_limiter.attr);
+    if (rc) {
+        pr_err(KERN_WARNING "%s: sysfs_create_file failed for power_limiter\n", __func__);
+        rc = -1;
+        goto out;
+    }
     pm_qos_add_request(&pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
 		PM_QOS_DEFAULT_VALUE);
 
     pm_qos_add_request(&pm_qos_ddr_req, PM_QOS_DDR_OPP,
 		PM_QOS_DDR_OPP_DEFAULT_VALUE);
+    enable = 1;
+    init_done = 1;
 out:
     return rc;
 }
@@ -202,7 +225,7 @@ static void __exit freq_end(void)
     kfree(freq_to_set);
 }
 
-module_init(freq_init);
+late_initcall(freq_init);
 module_exit(freq_end);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("trax85");
