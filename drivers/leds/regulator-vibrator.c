@@ -104,7 +104,7 @@ static int mt_vibra_parse_dt(struct device *dev,
 		return ret;
 	}
 
-	pr_info("vibr_conf = %u, %u, %u-%u\n",
+	pr_debug("vibr_conf = %u, %u, %u-%u\n",
 		vibr_conf->min_limit, vibr_conf->max_limit,
 		vibr_conf->min_volt, vibr_conf->max_volt);
 
@@ -119,7 +119,7 @@ static int vibr_power_set(struct reg_vibr *vibr)
 	if (vibr->vibr_conf.reg == NULL)
 		return ret;
 
-	pr_info("set voltage = %u-%u\n",
+	pr_debug("set voltage = %u-%u\n",
 		vibr->vibr_conf.min_volt, vibr->vibr_conf.max_volt);
 	ret = regulator_set_voltage(vibr->vibr_conf.reg,
 		vibr->vibr_conf.min_volt, vibr->vibr_conf.max_volt);
@@ -164,7 +164,7 @@ static void update_vibrator(struct work_struct *work)
 
 	struct reg_vibr *vibr = container_of(work, struct reg_vibr, vibr_work);
 
-	pr_info("vibr_state = %d\n", vibr->vibr_state);
+	pr_debug("vibr_state = %d\n", vibr->vibr_state);
 
 	if (vibr->vibr_oc_state) {
 		vibr->vibr_oc_state = false;
@@ -183,7 +183,7 @@ static void vibrator_enable(struct reg_vibr *vibr,
 {
 	unsigned long flags;
 
-	pr_info("cancel hrtimer, cust:%u-%u, dur:%u, shutdown:%d\n",
+	pr_debug("cancel hrtimer, cust:%u-%u, dur:%u, shutdown:%d\n",
 		vibr->vibr_conf.min_limit, vibr->vibr_conf.max_limit,
 		dur, vibr->vibr_shutdown);
 	spin_lock_irqsave(&vibr->vibr_lock, flags);
@@ -240,7 +240,7 @@ static ssize_t activate_store(struct device *dev,
 		return ret;
 	}
 	duration = vibr->vibr_dur;
-	pr_info("set activate duration = %u, %u\n",
+	pr_debug("set activate duration = %u, %u\n",
 		activate, duration);
 	vibrator_enable(vibr, duration, activate);
 
@@ -370,7 +370,7 @@ static int vib_probe(struct platform_device *pdev)
 	int ret;
 	struct reg_vibr *m_vibr;
 
-	pr_info("probe start +++");
+	pr_debug("probe start +++");
 	m_vibr = devm_kzalloc(&pdev->dev, sizeof(struct reg_vibr), GFP_KERNEL);
 	if (!m_vibr) {
 		ret = -ENOMEM;
@@ -419,7 +419,7 @@ static int vib_probe(struct platform_device *pdev)
 		pr_info("set voltage for regulator fail\n");
 		goto err;
 	}
-	pr_info("probe success, end ---");
+	pr_debug("probe success, end ---");
 	return 0;
 
 err:
@@ -444,7 +444,7 @@ static void vib_shutdown(struct platform_device *pdev)
 	unsigned long flags;
 	struct reg_vibr *vibr = platform_get_drvdata(pdev);
 
-	pr_info("shutdown: enter!\n");
+	pr_debug("shutdown: enter!\n");
 	spin_lock_irqsave(&vibr->vibr_lock, flags);
 	vibr->vibr_shutdown = 1;
 	if (vibr->vibr_state) {
