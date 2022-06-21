@@ -2,6 +2,11 @@
  * @file    power_limit.c
  * @author  Tejas udupa
  * @date    12 May 2022
+ * 
+ * @version 1.2 - Fix frequency values being held even after suspend by saving
+ *              values in user_freq array struct and checking for freq_held.
+ *              apply user_freq values on release.
+ *              
  * @version 1.1 - add policy_apply_limits() function which can be used
  *              to clamp max, min for current policy
  * 
@@ -29,18 +34,22 @@ static bool init_done = 0;
 
 void policy_apply_limits(void)
 {    
+    struct cpufreq_policy *policy;
     int i;
 
-    if(!init_done)
+    if(!init_done || freq_held)
         return;
 
     for (i = 0; i < cluster_num; i++) {
-        struct cpufreq_policy *policy = cpufreq_cpu_get(cpu_num[i]);
-        freq_to_set[i].min = policy->min;
-        freq_to_set[i].max = policy->max;
+        policy = cpufreq_cpu_get(cpu_num[i]);
+        if(!policy)
+            continue;
+        user_freq[i].min = policy->min;
+        user_freq[i].max = policy->max;
+        pr_debug("%s: cluster:%d max:%d min:%d bool:%d\n",__func__, i,
+            policy->max, policy->min, freq_held);
     }
-    pr_debug("%s: cluster:%d freq:%d\n",__func__,cluster_num,freq_to_set);
-    mt_ppm_userlimit_cpu_freq(cluster_num, freq_to_set);
+    mt_ppm_userlimit_cpu_freq(cluster_num, user_freq);
 }
 
 static int freq_hold(void)
@@ -48,11 +57,16 @@ static int freq_hold(void)
     int i,retval;
 
     for (i = 0; i < cluster_num; i++) {
-        freq_to_set[i].min = -1;
+        freq_to_set[i].min = user_freq[i].min;
         freq_to_set[i].max = freq_to_hold[i][power_profile];
+        pr_debug("%s: cluster:%d max:%d min:%d saved max:%d\n",__func__, i,
+            freq_to_set[i].max, freq_to_set[i].min, user_freq[i].max);
     }
-    pr_debug("%s: cluster:%d freq:%d\n",__func__,cluster_num,freq_to_set);
+    
     retval = mt_ppm_userlimit_cpu_freq(cluster_num, freq_to_set);
+    /* prevent any and all policy limits updates when freq is held or
+     * device is in sleep */
+    freq_held = true;
 
     return retval;
 }
@@ -62,11 +76,14 @@ static int freq_release(void)
     int i,retval;
 
     for (i = 0; i < cluster_num; i++) {
-        freq_to_set[i].min = -1;
-        freq_to_set[i].max = -1;
+        freq_to_set[i].min = user_freq[i].min;
+        freq_to_set[i].max = user_freq[i].max;
+        pr_debug("%s: cluster:%d max:%d min:%d\n",__func__, i,
+            user_freq[i].max, user_freq[i].min);
     }
-    pr_debug("%s: cluster:%d freq:%d\n",__func__,cluster_num,freq_to_set);
+    
     retval = mt_ppm_userlimit_cpu_freq(cluster_num, freq_to_set);
+    freq_held = false;
 
     return retval;
 }
@@ -173,11 +190,26 @@ static struct kobj_attribute enable_limiter =
 
 static int __init freq_init(void)
 {
-    int rc = 0;
+    struct cpufreq_policy *policy;
+    int rc = 0, i;
+    
     cluster_num = arch_get_nr_clusters();
 
     freq_to_set = kcalloc(cluster_num,
                 sizeof(struct ppm_limit_data), GFP_KERNEL);
+    user_freq = kcalloc(cluster_num,
+                sizeof(struct ppm_limit_data), GFP_KERNEL);
+
+    for(i = 0; i < cluster_num; i++){
+        policy = cpufreq_cpu_get(cpu_num[i]);
+        if(!policy){
+            user_freq[i].min = -1;
+            user_freq[i].max = -1;
+            continue;
+        }
+        user_freq[i].min = policy->min;
+        user_freq[i].max = policy->max;
+    }
 
     if (!freq_to_set) {
         pr_err("kcalloc freq_to_set fail\n");
