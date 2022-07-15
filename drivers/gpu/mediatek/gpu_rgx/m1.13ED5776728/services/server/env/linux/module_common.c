@@ -174,14 +174,12 @@ int PVRSRVDriverInit(void)
 
 /* MTK: use procfs first */
 #if defined(CONFIG_PROC_FS)
-	PVR_DPF((PVR_DBG_ERROR, "%s:CONFIG_PROC_FS",__func__));
 	error = PVRProcFsRegister();
 	if (error != PVRSRV_OK)
 	{
 		return -ENOMEM;
 	}
 #elif defined(CONFIG_DEBUG_FS)
-	PVR_DPF((PVR_DBG_ERROR, "%s:CONFIG_DEBUG_FS",__func__));
 	error = PVRDebugFsRegister();
 	if (error != PVRSRV_OK)
 	{

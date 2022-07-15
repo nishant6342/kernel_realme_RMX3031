@@ -2978,7 +2978,7 @@ PMRUnlockSysPhysAddressesOSMem(PMR_IMPL_PRIVDATA pvPriv)
 }
 
 static INLINE IMG_BOOL IsOffsetValid(const PMR_OSPAGEARRAY_DATA *psOSPageArrayData,
-					IMG_UINT32 ui32Offset)
+                                     IMG_UINT32 ui32Offset)
 {
 	return (ui32Offset >> psOSPageArrayData->uiLog2AllocPageSize) <
 	    psOSPageArrayData->uiTotalNumOSPages;
@@ -3028,7 +3028,11 @@ PMRSysPhysAddrOSMem(PMR_IMPL_PRIVDATA pvPriv,
 		if (pbValid[uiIdx])
 		{
 			PVR_LOG_RETURN_IF_FALSE(IsOffsetValid(psOSPageArrayData, puiOffset[uiIdx]),
+<<<<<<< HEAD
 					"puiOffset out of range", PVRSRV_ERROR_OUT_OF_RANGE);
+=======
+			                        "puiOffset out of range", PVRSRV_ERROR_OUT_OF_RANGE);
+>>>>>>> 3d6460fa4a48 ([ALPS07393104] GPU: sync code for 65)
 
 			psDevPAddr[uiIdx] = GetOffsetPA(psOSPageArrayData, puiOffset[uiIdx]);
 
