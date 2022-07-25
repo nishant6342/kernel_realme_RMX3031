@@ -20,7 +20,7 @@ config OPPO_COMMON_SOFT
 	id.
 
 config OPPO_DEVICE_IFNO
-  bool "config devinfo"
+  tristate "config devinfo"
   tristate "config oppo devinfo"
   select OPPO_ARCH_FILE
   help
