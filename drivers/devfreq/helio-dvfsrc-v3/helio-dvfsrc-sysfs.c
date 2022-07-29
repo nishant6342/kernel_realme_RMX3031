@@ -251,9 +251,6 @@ static ssize_t dvfsrc_level_intr_log_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
 	int val = 0;
-	struct helio_dvfsrc *dvfsrc;
-
-	dvfsrc = dev_get_drvdata(dev);
 
 	if (kstrtoint(buf, 10, &val))
 		return -EINVAL;
