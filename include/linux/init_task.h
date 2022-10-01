@@ -182,6 +182,13 @@ extern struct cred init_cred;
 # define INIT_RT_MUTEXES(tsk)
 #endif
 
+#ifdef CONFIG_KERNEL_LOCK_OPT
+#define INIT_UX_SEMAPHORE(tsk)						\
+	.own_rwsem	= LIST_HEAD_INIT(init_task.own_rwsem),
+#else
+#define INIT_UX_SEMAPHORE(tsk)
+#endif
+
 #ifdef CONFIG_NUMA_BALANCING
 # define INIT_NUMA_BALANCING(tsk)					\
 	.numa_preferred_nid = -1,					\
@@ -293,6 +300,7 @@ extern struct cred init_cred;
 	INIT_TASK_RCU_TASKS(tsk)					\
 	INIT_CPUSET_SEQ(tsk)						\
 	INIT_RT_MUTEXES(tsk)						\
+	INIT_UX_SEMAPHORE(tsk)						\
 	INIT_PREV_CPUTIME(tsk)						\
 	INIT_VTIME(tsk)							\
 	INIT_NUMA_BALANCING(tsk)					\

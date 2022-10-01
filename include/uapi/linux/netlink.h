@@ -32,7 +32,29 @@
 
 #define NETLINK_INET_DIAG	NETLINK_SOCK_DIAG
 
-#define MAX_LINKS 32		
+//#ifdef OPLUS_FEATURE_WIFI_CAPCENTER
+//XuFenghua@CONNECTIVITY.WIFI.BASIC.CAPCENTER.190453, 2020/07/05, Add for Oplus WIFI Cap Center
+#define NETLINK_OPLUS_WIFI_CAP_CENTER_SYNC 39
+#define NETLINK_OPLUS_WIFI_CAP_CENTER_ASYNC 40
+//#endif /* OPLUS_FEATURE_WIFI_CAPCENTER */
+
+#ifdef OPLUS_FEATURE_HANS_FREEZE
+//#Kun.Zhou@ANDROID.RESCONTROL, 2019/09/23, add for hans freeze manager
+#define NETLINK_OPPO_HANS       29      /* Socket for freezing solution*/
+#endif /*OPLUS_FEATURE_HANS_FREEZE*/
+
+//#ifdef OPLUS_FEATURE_NWPOWER
+#define NETLINK_OPLUS_NWPOWERSTATE	36	/*OPLUS NW PowerState*/
+//#endif /* OPLUS_FEATURE_NWPOWER */
+//#ifdef OPLUS_FEATURE_THEIA
+//Jianping.Zheng@TECH.AD.Stability.Crash, 2020/11/19, Add for theia powerkey check notify
+//should match with oppo_theia/include/TheiaKeventThread.h define
+#define OPLUS_NETLINK_THEIA_KEVENT 43
+//#endif /* OPLUS_FEATURE_THEIA */
+
+//#ifdef OPLUS_FEATURE_SECURITY_COMMON
+#define MAX_LINKS 44
+//#endif /*OPLUS_FEATURE_SECURITY_COMMON*/
 
 struct sockaddr_nl {
 	__kernel_sa_family_t	nl_family;	/* AF_NETLINK	*/
