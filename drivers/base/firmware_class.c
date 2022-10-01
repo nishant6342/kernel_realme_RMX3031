@@ -367,11 +367,27 @@ static void fw_free_buf(struct firmware_buf *buf)
 /* direct firmware loading support */
 static char fw_path_para[256];
 static const char * const fw_path[] = {
+       //#ifdef OPLUS_FEATURE_BT_FW_SAU_MTK
+       //FengChen@CONNECTIVITY.BT.Basic.Feature.996618, 2021/03/25
+       //Add for fw sau
+       "/data/vendor/firmware/update/",
+       //#endif /* OPLUS_FEATURE_BT_FW_SAU_MTK */
+	//#ifdef OPLUS_FEATURE_WIFI_RUSUPGRADE
+	//JiaoBo@CONNECTIVITY.WIFI.HARDWARE.SAU.2795386, 2020/02/20
+	//add for: support auto update function, include mtk fw, mtk wifi.cfg, qcom fw, qcom bdf, qcom ini
+	"/data/misc/firmware/active",
+	//#endif /* OPLUS_FEATURE_WIFI_RUSUPGRADE */
+
+	// #ifdef OPLUS_FEATURE_WIFI_FTM
+	// SongYaofei@CONNECTIVITY.WIFI.HARDWARE, 2021/11/30
+	// Add for WMT_SOC.cfg path
+	"/odm/etc/wifi/",
+	// #endif /* OPLUS_FEATURE_WIFI_FTM */
 	fw_path_para,
 	"/lib/firmware/updates/" UTS_RELEASE,
 	"/lib/firmware/updates",
 	"/lib/firmware/" UTS_RELEASE,
-	"/lib/firmware"
+	"/lib/firmware",
 };
 
 /*

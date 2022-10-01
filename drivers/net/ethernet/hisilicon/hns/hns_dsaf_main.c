@@ -290,7 +290,6 @@ static void hns_dsaf_inner_qid_cfg(struct dsaf_device *dsaf_dev)
 /**
  * hns_dsaf_sw_port_type_cfg - cfg sw type
  * @dsaf_id: dsa fabric id
- * @psw_port_type: array
  */
 static void hns_dsaf_sw_port_type_cfg(struct dsaf_device *dsaf_dev,
 				      enum dsaf_sw_port_type port_type)

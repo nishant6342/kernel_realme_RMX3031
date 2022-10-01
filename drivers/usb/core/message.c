@@ -566,7 +566,16 @@ void usb_sg_wait(struct usb_sg_request *io)
 	 * So could the submit loop above ... but it's easier to
 	 * solve neither problem than to solve both!
 	 */
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	//modify completion with 55s timeout
+	//for exception usb storage devices
+	if (!wait_for_completion_timeout(&io->complete, HZ*55)) {
+		dev_warn(&io->dev->dev,"%s urb timeout\n", __func__);
+		usb_sg_cancel(io);
+	}
+#else
 	wait_for_completion(&io->complete);
+#endif /*OPLUS_FEATURE_CHG_BASIC*/
 
 	sg_clean(io);
 }
@@ -1301,7 +1310,8 @@ void usb_enable_interface(struct usb_device *dev,
  * Return: Zero on success, or else the status code returned by the
  * underlying usb_control_msg() call.
  */
-int usb_set_interface(struct usb_device *dev, int interface, int alternate)
+int usb_set_interface_timeout(struct usb_device *dev, int interface,
+	int alternate, unsigned long timeout_ms)
 {
 	struct usb_interface *iface;
 	struct usb_host_interface *alt;
@@ -1365,7 +1375,7 @@ int usb_set_interface(struct usb_device *dev, int interface, int alternate)
 	else
 		ret = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
 				   USB_REQ_SET_INTERFACE, USB_RECIP_INTERFACE,
-				   alternate, interface, NULL, 0, 5000);
+				   alternate, interface, NULL, 0, timeout_ms);
 
 	/* 9.4.10 says devices don't need this and are free to STALL the
 	 * request if the interface only has one alternate setting.
@@ -1436,6 +1446,12 @@ int usb_set_interface(struct usb_device *dev, int interface, int alternate)
 		create_intf_ep_devs(iface);
 	}
 	return 0;
+}
+EXPORT_SYMBOL_GPL(usb_set_interface_timeout);
+
+int usb_set_interface(struct usb_device *dev, int interface, int alternate)
+{
+	return usb_set_interface_timeout(dev, interface, alternate, 5000);
 }
 EXPORT_SYMBOL_GPL(usb_set_interface);
 

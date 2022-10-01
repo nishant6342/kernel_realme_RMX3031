@@ -35,6 +35,11 @@
 
 #include <video/mipi_display.h>
 
+#ifdef OPLUS_BUG_STABILITY
+/* Zhijun.Ye@MM.Display.LCD, 2021/11/16, add for lcd */
+u32 dsi_channel_num = 3;
+#endif
+
 /**
  * DOC: dsi helpers
  *
@@ -214,7 +219,12 @@ mipi_dsi_device_register_full(struct mipi_dsi_host *host,
 		return ERR_PTR(-EINVAL);
 	}
 
+	#ifdef OPLUS_BUG_STABILITY
+	/* Zhijun.Ye@MM.Display.LCD, 2021/11/16, modify for lcd */
+	if (info->channel > dsi_channel_num) {
+	#else
 	if (info->channel > 3) {
+	#endif
 		dev_err(dev, "invalid virtual channel: %u\n", info->channel);
 		return ERR_PTR(-EINVAL);
 	}
@@ -232,7 +242,8 @@ mipi_dsi_device_register_full(struct mipi_dsi_host *host,
 
 	ret = mipi_dsi_device_add(dsi);
 	if (ret) {
-		dev_err(dev, "failed to add DSI device %d\n", ret);
+		dev_err(dev, "failed to add DSI device:%s ret:%d\n",
+			dsi->name, ret);
 		kfree(dsi);
 		return ERR_PTR(ret);
 	}

@@ -32,6 +32,10 @@
 #include <linux/tick.h>
 #include <trace/events/power.h>
 
+#if defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_SCHED)
+#include <linux/task_sched_info.h>
+#endif /* defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_SCHED) */
+
 static LIST_HEAD(cpufreq_policy_list);
 
 static inline bool policy_is_inactive(struct cpufreq_policy *policy)
@@ -343,8 +347,12 @@ static void __cpufreq_notify_transition(struct cpufreq_policy *policy,
 		cpufreq_times_record_transition(policy, freqs->new);
 		srcu_notifier_call_chain(&cpufreq_transition_notifier_list,
 				CPUFREQ_POSTCHANGE, freqs);
-		if (likely(policy) && likely(policy->cpu == freqs->cpu))
+		if (likely(policy) && likely(policy->cpu == freqs->cpu)) {
 			policy->cur = freqs->new;
+#if defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_SCHED)
+		update_freq_info(policy);
+#endif /* defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_SCHED) */
+		}
 		break;
 	}
 }
@@ -377,10 +385,10 @@ static void cpufreq_notify_post_transition(struct cpufreq_policy *policy,
 	cpufreq_notify_transition(policy, freqs, CPUFREQ_POSTCHANGE);
 }
 
+extern int update_cpu_capacity_cpumask(struct cpumask *cpus);
 void cpufreq_freq_transition_begin(struct cpufreq_policy *policy,
 		struct cpufreq_freqs *freqs)
 {
-
 	/*
 	 * Catch double invocations of _begin() which lead to self-deadlock.
 	 * ASYNC_NOTIFICATION drivers are left out because the cpufreq core
@@ -406,6 +414,13 @@ wait:
 	policy->transition_task = current;
 
 	spin_unlock(&policy->transition_lock);
+#if !defined(CONFIG_MACH_MT6893) && !defined(CONFIG_MACH_MT6877) \
+	&& !defined(CONFIG_MACH_MT6781) && !defined(CONFIG_MACH_MT6833)
+	arch_set_freq_scale(policy->cpus, freqs->new, policy->cpuinfo.max_freq);
+#endif
+	arch_set_max_freq_scale(policy->cpus, policy->max);
+	arch_set_min_freq_scale(policy->cpus, policy->min);
+	update_cpu_capacity_cpumask(policy->cpus);
 
 	cpufreq_notify_transition(policy, freqs, CPUFREQ_PRECHANGE);
 }
@@ -2249,7 +2264,12 @@ static int cpufreq_set_policy(struct cpufreq_policy *policy,
 	policy->min = new_policy->min;
 	policy->max = new_policy->max;
 
+#if defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_SCHED)
+	update_freq_limit_info(policy);
+#endif /* defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_SCHED) */
+
 	arch_set_max_freq_scale(policy->cpus, policy->max);
+	arch_set_min_freq_scale(policy->cpus, policy->min);
 
 	trace_cpu_frequency_limits(policy->max, policy->min, policy->cpu);
 
@@ -2467,6 +2487,11 @@ __weak void arch_set_max_freq_scale(struct cpumask *cpus,
 }
 EXPORT_SYMBOL_GPL(arch_set_max_freq_scale);
 
+__weak void arch_set_min_freq_scale(struct cpumask *cpus,
+				    unsigned long policy_min_freq)
+{
+}
+EXPORT_SYMBOL_GPL(arch_set_min_freq_scale);
 /*********************************************************************
  *               REGISTER / UNREGISTER CPUFREQ DRIVER                *
  *********************************************************************/

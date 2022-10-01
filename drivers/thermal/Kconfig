@@ -15,6 +15,13 @@ menuconfig THERMAL
 
 if THERMAL
 
+config MTK_FLED_NTC_MOSS
+	bool "Thermal switch for query FLED_NTC temp"
+	depends on THERMAL
+	default n
+	help
+	  Add for moss flashlight ntc.
+
 config THERMAL_EMERGENCY_POWEROFF_DELAY_MS
 	int "Emergency poweroff delay in milli-seconds"
 	depends on THERMAL
@@ -77,6 +84,16 @@ choice
 	  This option sets which thermal governor shall be loaded at
 	  startup. If in doubt, select 'step_wise'.
 
+config THERMAL_DEFAULT_GOV_BACKWARD_COMPATIBLE
+	bool "backward_compatible"
+	select THERMAL_BACKWARD_COMPATIBLE
+	help
+	  Use the backward_compatible governor as default. This throttles the
+	  devices when the temperature is over each trip point.
+	  Backward-compatible governor resembles the behaviors of thermal
+	  framework in Linux kernel 2.6. It sets cooler states whenever
+	  temperature is updated no meter cooler state change or not.
+
 config THERMAL_DEFAULT_GOV_STEP_WISE
 	bool "step_wise"
 	select THERMAL_GOV_STEP_WISE
@@ -108,6 +125,14 @@ config THERMAL_DEFAULT_GOV_POWER_ALLOCATOR
 	  operate on cooling devices that implement the power API.
 
 endchoice
+
+config THERMAL_BACKWARD_COMPATIBLE
+	bool "Backward-compatible thermal governor"
+	help
+	  Enable this to manage platform thermals using backward-compatible governor.
+	  Backward-compatible governor resembles the behaviors of thermal
+	  framework in Linux kernel 2.6. It sets cooler states whenever
+	  temperature is updated no meter cooler state change or not.
 
 config THERMAL_GOV_FAIR_SHARE
 	bool "Fair-share thermal governor"
@@ -191,6 +216,12 @@ config THERMAL_EMULATION
 	  WARNING: Be careful while enabling this option on production systems,
 	  because userland can easily disable the thermal policy by simply
 	  flooding this sysfs node with low temperature values.
+
+config HORAE_THERMAL_SHELL
+	bool "Horae shell temp driver"
+	default y
+	help
+	  Provide three thermal zones(front, frame and back) to get real shell temp.
 
 config HISI_THERMAL
 	tristate "Hisilicon thermal driver"

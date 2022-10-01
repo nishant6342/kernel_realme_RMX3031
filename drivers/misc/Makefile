@@ -48,6 +48,7 @@ obj-$(CONFIG_VMWARE_VMCI)	+= vmw_vmci/
 obj-$(CONFIG_LATTICE_ECP3_CONFIG)	+= lattice-ecp3-config.o
 obj-$(CONFIG_SRAM)		+= sram.o
 obj-$(CONFIG_SRAM_EXEC)		+= sram-exec.o
+obj-$(CONFIG_ACCESS_RAMOOPS)	+= access_ramoops.o
 obj-y				+= mic/
 obj-$(CONFIG_GENWQE)		+= genwqe/
 obj-$(CONFIG_ECHO)		+= echo/
@@ -59,6 +60,15 @@ obj-$(CONFIG_PCI_ENDPOINT_TEST)	+= pci_endpoint_test.o
 
 obj-$(CONFIG_UID_SYS_STATS)	+= uid_sys_stats.o
 obj-$(CONFIG_MEMORY_STATE_TIME)	+= memory_state_time.o
+obj-$(CONFIG_MEDIATEK_SOLUTION) += mediatek/
+#ifdef OPLUS_FEATURE_CHG_BASIC//Fanhong.Kong@ProDrv.CHG,add 2018/10/25 for vib aw8697				+= lis3lv02d/
+obj-$(CONFIG_AW8697_HAPTIC)		+= aw8697_haptic/
+#endif
+#ifdef OPLUS_ARCH_EXTEND
+obj-$(CONFIG_MTK_FB)		+= oplus/
+#endif
+
+obj-$(CONFIG_OPLUS_MISC_HEALTHONFO)		+= oplus_misc_healthinfo/
 
 lkdtm-$(CONFIG_LKDTM)		+= lkdtm_core.o
 lkdtm-$(CONFIG_LKDTM)		+= lkdtm_bugs.o
@@ -77,3 +87,8 @@ OBJCOPYFLAGS_lkdtm_rodata_objcopy.o := \
 targets += lkdtm_rodata.o lkdtm_rodata_objcopy.o
 $(obj)/lkdtm_rodata_objcopy.o: $(obj)/lkdtm_rodata.o FORCE
 	$(call if_changed,objcopy)
+obj-$(CONFIG_SIM_DETECT)	+= sim_detect.o
+
+#ifdef CONFIG_OPLUS_TRIKEY_HALL
+obj-y				+= tri_state_key/
+#endif CONFIG_OPLUS_TRIKEY_HALL
