@@ -4,7 +4,7 @@
  *
  *  Copyright (C) 1991, 1992, 1993, 1994  Linus Torvalds
  *
- *  Swap reorganised 29.12.95, 
+ *  Swap reorganised 29.12.95,
  *  Asynchronous swapping added 30.12.95. Stephen Tweedie
  *  Removed race in async swapping. 14.4.1996. Bruno Haible
  *  Add swap of shared pages through the page cache. 20.2.1998. Stephen Tweedie
@@ -303,6 +303,9 @@ int __swap_writepage(struct page *page, struct writeback_control *wbc,
 		unlock_page(page);
 		ret = mapping->a_ops->direct_IO(&kiocb, &from);
 		if (ret == PAGE_SIZE) {
+#ifdef CONFIG_MTK_MLOG
+			current->swap_out++;
+#endif
 			count_vm_event(PSWPOUT);
 			ret = 0;
 		} else {
@@ -327,6 +330,9 @@ int __swap_writepage(struct page *page, struct writeback_control *wbc,
 
 	ret = bdev_write_page(sis->bdev, swap_page_sector(page), page, wbc);
 	if (!ret) {
+#ifdef CONFIG_MTK_MLOG
+		current->swap_out++;
+#endif
 		count_swpout_vm_event(page);
 		return 0;
 	}
@@ -340,6 +346,9 @@ int __swap_writepage(struct page *page, struct writeback_control *wbc,
 		goto out;
 	}
 	bio->bi_opf = REQ_OP_WRITE | wbc_to_write_flags(wbc);
+#ifdef CONFIG_MTK_MLOG
+	current->swap_out++;
+#endif
 	count_swpout_vm_event(page);
 	set_page_writeback(page);
 	unlock_page(page);
@@ -366,7 +375,12 @@ int swap_readpage(struct page *page, bool do_poll)
 	 * or the submitting cgroup IO-throttled, submission can be a
 	 * significant part of overall IO time.
 	 */
+#ifdef CONFIG_NANDSWAP
+	if (!(sis->flags & SWP_NANDSWAP))
+		psi_memstall_enter(&pflags);
+#else
 	psi_memstall_enter(&pflags);
+#endif
 
 	if (frontswap_load(page) == 0) {
 		SetPageUptodate(page);
@@ -379,8 +393,12 @@ int swap_readpage(struct page *page, bool do_poll)
 		struct address_space *mapping = swap_file->f_mapping;
 
 		ret = mapping->a_ops->readpage(swap_file, page);
-		if (!ret)
+		if (!ret) {
+#ifdef CONFIG_MTK_MLOG
+			current->swap_in++;
+#endif
 			count_vm_event(PSWPIN);
+		}
 		goto out;
 	}
 
@@ -390,7 +408,9 @@ int swap_readpage(struct page *page, bool do_poll)
 			swap_slot_free_notify(page);
 			unlock_page(page);
 		}
-
+#ifdef CONFIG_MTK_MLOG
+		current->swap_in++;
+#endif
 		count_vm_event(PSWPIN);
 		goto out;
 	}
@@ -410,6 +430,9 @@ int swap_readpage(struct page *page, bool do_poll)
 	get_task_struct(current);
 	bio->bi_private = current;
 	bio_set_op_attrs(bio, REQ_OP_READ, 0);
+#ifdef CONFIG_MTK_MLOG
+	current->swap_in++;
+#endif
 	count_vm_event(PSWPIN);
 	bio_get(bio);
 	qc = submit_bio(bio);
@@ -425,7 +448,12 @@ int swap_readpage(struct page *page, bool do_poll)
 	bio_put(bio);
 
 out:
+#ifdef CONFIG_NANDSWAP
+	if (!(sis->flags & SWP_NANDSWAP))
+		psi_memstall_leave(&pflags);
+#else
 	psi_memstall_leave(&pflags);
+#endif
 	return ret;
 }
 
