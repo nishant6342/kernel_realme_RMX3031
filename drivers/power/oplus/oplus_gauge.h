@@ -80,6 +80,8 @@ struct oplus_gauge_operations {
 	int (*set_allow_reading)(int enable);
 	int (*wlchg_started_status)(bool status);
 	int (*get_bcc_parameters)(char *buf);
+	int (*get_update_bcc_parameters)(char *buf);
+	int (*get_prev_bcc_parameters)(char *buf);
 	int (*set_bcc_parameters)(const char *buf);
 };
 
@@ -161,6 +163,8 @@ int oplus_gauge_get_sub_batt_temperature(void);
 bool oplus_gauge_get_sub_batt_authenticate(void);
 void exfg_information_register(struct oplus_gauge_operations *exfg);
 int oplus_gauge_get_bcc_parameters(char *buf);
+int oplus_gauge_fastchg_update_bcc_parameters(char *buf);
+int oplus_gauge_get_prev_bcc_parameters(char *buf);
 int oplus_gauge_set_bcc_parameters(const char *buf);
 
 #if defined(CONFIG_OPLUS_CHARGER_MTK6763) || defined(CONFIG_OPLUS_CHARGER_MTK6771)

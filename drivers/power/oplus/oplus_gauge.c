@@ -779,6 +779,30 @@ int oplus_gauge_get_bcc_parameters(char *buf)
 	}
 }
 
+int oplus_gauge_fastchg_update_bcc_parameters(char *buf)
+{
+	if (!g_gauge_chip)
+		return 0;
+	else {
+		if (g_gauge_chip->gauge_ops && g_gauge_chip->gauge_ops->get_update_bcc_parameters) {
+			g_gauge_chip->gauge_ops->get_update_bcc_parameters(buf);
+		}
+		return 0;
+	}
+}
+
+int oplus_gauge_get_prev_bcc_parameters(char *buf)
+{
+	if (!g_gauge_chip)
+		return 0;
+	else {
+		if (g_gauge_chip->gauge_ops && g_gauge_chip->gauge_ops->get_prev_bcc_parameters) {
+			g_gauge_chip->gauge_ops->get_prev_bcc_parameters(buf);
+		}
+		return 0;
+	}
+}
+
 int oplus_gauge_set_bcc_parameters(const char *buf)
 {
 	if (!g_gauge_chip)
