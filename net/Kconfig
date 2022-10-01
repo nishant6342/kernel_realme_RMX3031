@@ -453,3 +453,22 @@ config HAVE_CBPF_JIT
 # Extended BPF JIT (eBPF)
 config HAVE_EBPF_JIT
 	bool
+
+# HuangJunyuan@CONNECTIVITY.WIFI.INTERNET.1197891, 2018/04/10,Add code for oplus sla function
+source "net/oplus_connectivity_sla/Kconfig"
+
+config MTK_NET_LOGGING
+	bool "Enable MTK Network debug log"
+	---help---
+	  This config helps to enable/disable Network debug log
+
+#ifdef OPLUS_FEATURE_WIFI_CAPCENTER
+#XuFenghua@CONNECTIVITY.WIFI.BASIC.CAPCENTER.190453, OPLUS_FEATURE_WIFI_CAPCENTER, 2021/5/31
+source "net/oplus_wificapcenter/Kconfig"
+#endif /* OPLUS_FEATURE_WIFI_CAPCENTER */
+
+# PengHao@NETWORK.DATA.EVAL, 2020/05/09, Add for data eval
+source "net/oplus_score/Kconfig"
+
+# ShiQianhua@NETWORK.DATA.2341538 2021/10/18 add for network modules
+source "net/oplus_modules/Kconfig"

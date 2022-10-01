@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2018-2020 Oplus. All rights reserved.
+
+#ShiQianhua@NETWORK.DATA.1816043, 2021/08/09, add for dns hook.
+source "net/oplus_modules/oplus_dns_hook/Kconfig"
+
+#ShiQianhua@NETWORK.DATA.2360276, 2021/11/02 add for kernel stats
+source "net/oplus_modules/oplus_stats_calc/Kconfig"

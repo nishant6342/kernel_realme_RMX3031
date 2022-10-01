@@ -18,7 +18,7 @@ obj-$(CONFIG_NETFILTER)		+= netfilter/
 obj-$(CONFIG_INET)		+= ipv4/
 obj-$(CONFIG_TLS)		+= tls/
 obj-$(CONFIG_XFRM)		+= xfrm/
-obj-$(CONFIG_UNIX)		+= unix/
+obj-$(CONFIG_UNIX_SCM)		+= unix/
 obj-$(CONFIG_NET)		+= ipv6/
 obj-$(CONFIG_PACKET)		+= packet/
 obj-$(CONFIG_NET_KEY)		+= key/
@@ -86,3 +86,26 @@ obj-y				+= l3mdev/
 endif
 obj-$(CONFIG_QRTR)		+= qrtr/
 obj-$(CONFIG_NET_NCSI)		+= ncsi/
+
+
+#ifdef OPLUS_FEATURE_WIFI_SLA
+#HuangJunyuan@CONNECTIVITY.WIFI.INTERNET.1197891, 2018/04/10,Add code for oplus sla function
+obj-$(CONFIG_OPLUS_FEATURE_WIFI_SLA)                  	+= oplus_connectivity_sla/
+#endif /* OPLUS_FEATURE_WIFI_SLA */
+
+#ifdef OPLUS_FEATURE_DATA_EVAL
+#PengHao@NETWORK.DATA.8124, 2020/05/08, Add for network quality evaluation.
+obj-$(CONFIG_OPLUS_FEATURE_DATA_EVAL) += oplus_score/
+#endif /* OPLUS_FEATURE_DATA_EVAL */
+
+#ifdef OPLUS_FEATURE_WIFI_CAPCENTER
+#XuFenghua@CONNECTIVITY.WIFI.BASIC.CAPCENTER.190453, 2020/7/6, Add for Oplus Wifi capability center
+obj-$(CONFIG_OPLUS_FEATURE_WIFI_CAPCENTER) += oplus_wificapcenter/
+#endif /* OPLUS_FEATURE_WIFI_CAPCENTER */
+
+# ShiQianhua@NETWORK.DATA.2341538 2021/10/18 add for network modules
+obj-y                           += oplus_modules/
+
+#ifdef OPLUS_FEATURE_NWPOWER
+obj-y				+= oplus_nwpower/
+#endif /* OPLUS_FEATURE_NWPOWER */
