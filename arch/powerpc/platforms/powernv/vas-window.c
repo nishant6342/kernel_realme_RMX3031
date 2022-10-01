@@ -570,7 +570,6 @@ static void put_rx_win(struct vas_window *rxwin)
 
 /*
  * Get the VAS receive window associated with NX engine identified
- * by @cop and if applicable, @pswid.
  *
  * See also function header of set_vinst_win().
  */
