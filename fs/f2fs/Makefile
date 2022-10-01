@@ -10,3 +10,6 @@ f2fs-$(CONFIG_F2FS_FS_POSIX_ACL) += acl.o
 f2fs-$(CONFIG_F2FS_IO_TRACE) += trace.o
 f2fs-$(CONFIG_FS_VERITY) += verity.o
 f2fs-$(CONFIG_F2FS_FS_COMPRESSION) += compress.o
+
+#Lingfei.Tang@TECH.Storage.FS.oF2FS, 2021/12/17, add f2fs bigdata statistics
+f2fs-$(CONFIG_F2FS_BD_STAT) += of2fs_sysfs.o
