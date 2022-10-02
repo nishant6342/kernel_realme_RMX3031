@@ -56,10 +56,6 @@ obj-y += irq/
 obj-y += rcu/
 obj-y += livepatch/
 
-#ifdef CONFIG_OPLUS_SECURE_GUARD
-obj-$(CONFIG_OPLUS_SECURE_GUARD) += keventupload/
-#endif /* CONFIG_OPLUS_SECURE_GUARD */
-
 #ifdef OPLUS_FEATURE_PREFER_SILVER
 obj-$(CONFIG_OPLUS_PREFER_SILVER) += prefer_silver/
 #endif /* OPLUS_FEATURE_PREFER SILVER */

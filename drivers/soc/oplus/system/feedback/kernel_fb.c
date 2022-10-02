@@ -183,12 +183,6 @@ static const struct genl_ops oplus_fb_kevent_upload_ops[] = {
 	},
 };
 
-#ifdef CONFIG_OPLUS_KEVENT_UPLOAD
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)) && !IS_ENABLED(CONFIG_OPLUS_KERNEL_SECURE_GUARD)
-int kevent_send_to_user(struct kernel_packet_info *userinfo) {return 0;}
-#endif
-#endif
-
 static struct genl_family oplus_fb_kevent_family __ro_after_init = {
 	.name		= OPLUS_FB_GUARD_PROTOCAL_NAME,
 	.version	= OPLUS_FB_GUARD_GENL_VERSION,
