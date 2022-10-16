@@ -6903,7 +6903,7 @@ void mtk_wait_TE(int te_num) {
 	}
 }
 
-void hbm_notify_fingerprint_if_neccessary() {
+void hbm_notify_fingerprint_if_neccessary(void) {
 	if (te_remain == 0) return;
 
 	te_remain --;
@@ -6969,7 +6969,7 @@ void mtk_wait_framedone(int fd_num) {
 	}
 }
 
-void hbm_notify_fingerprint_if_neccessary_vdo() {
+void hbm_notify_fingerprint_if_neccessary_vdo(void) {
 	if (framedone_remain == 0) return;
 
 	framedone_remain --;

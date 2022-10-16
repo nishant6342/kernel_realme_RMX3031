@@ -677,7 +677,7 @@ static int rndis_set_response(struct rndis_params *params,
 		    return -EINVAL;
 
 	r = rndis_add_response(params, sizeof(rndis_set_cmplt_type));
-	if (!r) {
+	if (!r)
 		return -ENOMEM;
 	resp = (rndis_set_cmplt_type *)r->buf;
 
@@ -1090,7 +1090,7 @@ EXPORT_SYMBOL_GPL(rndis_add_hdr);
 
 void rndis_free_response(struct rndis_params *params, u8 *buf)
 {
-	rndis_resp_t *r;
+	rndis_resp_t *r, *n;
 
 	spin_lock(&params->resp_lock);
 	list_for_each_entry_safe(r, n, &params->resp_queue, list) {
@@ -1105,8 +1105,7 @@ EXPORT_SYMBOL_GPL(rndis_free_response);
 
 u8 *rndis_get_next_response(struct rndis_params *params, u32 *length)
 {
-	rndis_resp_t *r;
-	struct list_head *act, *tmp;
+	rndis_resp_t *r, *n;
 
 	if (!length) return NULL;
 
