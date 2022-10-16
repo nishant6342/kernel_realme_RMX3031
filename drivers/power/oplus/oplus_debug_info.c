@@ -2272,7 +2272,7 @@ void oplus_chg_sc8547_error( int report_flag, int *buf, int len) {
 }
 
 /*add for wireless chg*/
-void oplus_chg_wireless_udpate_param()
+void oplus_chg_wireless_udpate_param(void)
 {
 	struct oplus_wpc_chip *wpc_chip = NULL;
 	oplus_get_wpc_chip_handle(&wpc_chip);

@@ -22,7 +22,7 @@ void Nvm_SwitchUID( uint32_t uid ) {
 	}
 }
 
-BOOL move_register_pointer()
+BOOL move_register_pointer(void)
 {
 	uint8_t ubUID10=0x00, cnt = 0;
 
