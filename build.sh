@@ -39,7 +39,7 @@ sleep 3 >/dev/null
 fi
 fi
 
-make O=out ARCH=arm64 mt6893_defconfig
+make O=out ARCH=arm64 cupida_defconfig
 
 PATH="${PWD}/clang/bin:${PATH}:${PWD}/los-4.9-32/bin:${PATH}:${PWD}/los-4.9-64/bin:${PATH}" \
 make -j$(nproc --all) O=out \

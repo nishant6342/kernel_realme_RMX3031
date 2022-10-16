@@ -58,12 +58,12 @@ static bool td_on_ring(struct xhci_td *td, struct xhci_ring *ring)
  * @ptr: address of hc register to be read
  * @mask: bits to look at in result of read
  * @done: value of those bits when handshake succeeds
- * @usec: timeout in microseconds
+ * @timeout_us: timeout in microseconds
  *
  * Returns negative errno, or zero on success
  *
  * Success happens when the "mask" bits have the specified value (hardware
- * handshake done).  There are two failure modes:  "usec" have passed (major
+ * handshake done).  There are two failure modes:  "timeout_us" have passed (major
  * hardware flakeout), or the register reads as all-ones (hardware removed).
  */
 int xhci_handshake(void __iomem *ptr, u32 mask, u32 done, int usec)
@@ -3831,6 +3831,10 @@ static void xhci_free_dev(struct usb_hcd *hcd, struct usb_device *udev)
 	 */
 	if (xhci->quirks & XHCI_RESET_ON_RESUME)
 		pm_runtime_put_noidle(hcd->self.controller);
+#endif
+
+#if IS_ENABLED(CONFIG_MTK_UAC_POWER_SAVING)
+	xhci->quirks &= ~XHCI_DEV_WITH_SYNC_EP;
 #endif
 
 	ret = xhci_check_args(hcd, udev, NULL, 0, true, __func__);
