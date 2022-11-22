@@ -25,4 +25,8 @@ obj-$(CONFIG_USB_POWER_DELIVERY)	+= tcpci_event.o \
 ifeq ($(CONFIG_OPLUS_CHARGER_MTK6769),y)
 #/*Liu.Yong@RM.CM.BSP.CHG 2020/08/22, Add TCPC code*/
 obj-$(CONFIG_TCPC_RT1711H)	+= tcpc_rt1711h.o
-endif	
+endif
+
+# HACK! While this driver is in bad shape, don't enable several warnings
+#       that would be otherwise enabled with W=1
+ccflags-y += $(call cc-disable-warning, unused-but-set-variable)
