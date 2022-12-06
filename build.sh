@@ -12,7 +12,7 @@ export ARCH=arm64
 export KBUILD_BUILD_HOST=origin
 export KBUILD_BUILD_USER="nishant6342"
 clangbin=clang/bin/clang
-if ! [ -a $clangbin ]; then git clone --depth=1 https://github.com/kdrag0n/proton-clang clang
+if ! [ -a $clangbin ]; then git clone --depth=1 https://github.com/Project-Elixir/android_prebuilts_clang_host_linux-x86_clang-r437112 clang
 fi
 gcc64bin=los-4.9-64/bin/aarch64-linux-android-as
 if ! [ -a $gcc64bin ]; then git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 los-4.9-64
@@ -42,13 +42,18 @@ fi
 make O=out ARCH=arm64 cupida_defconfig
 
 PATH="${PWD}/clang/bin:${PATH}:${PWD}/los-4.9-32/bin:${PATH}:${PWD}/los-4.9-64/bin:${PATH}" \
-make -j$(nproc --all) O=out \
-                      ARCH=arm64 \
-                      CC="clang" \
-                      CLANG_TRIPLE=aarch64-linux-gnu- \
-                      CROSS_COMPILE="${PWD}/los-4.9-64/bin/aarch64-linux-android-" \
-                      CROSS_COMPILE_ARM32="${PWD}/los-4.9-32/bin/arm-linux-androideabi-" \
-                      CONFIG_NO_ERROR_ON_MISMATCH=y
+make -j$(nproc --all)   O=out \
+                        ARCH=arm64 \
+                        CC="clang" \
+                        CLANG_TRIPLE=aarch64-linux-gnu- \
+                        CROSS_COMPILE="${PWD}/los-4.9-64/bin/aarch64-linux-android-" \
+                        CROSS_COMPILE_ARM32="${PWD}/los-4.9-32/bin/arm-linux-androideabi-" \
+                        LD=ld.lld \
+                        AS=llvm-as \
+                        AR=llvm-ar \
+                        NM=llvm-nm \
+                        OBJCOPY=llvm-objcopy \
+                        CONFIG_NO_ERROR_ON_MISMATCH=y
 }
 
 function zupload()
