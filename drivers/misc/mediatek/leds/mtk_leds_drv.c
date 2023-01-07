@@ -490,6 +490,10 @@ static int mt65xx_leds_probe(struct platform_device *pdev)
 			goto err;
 		}
 
+		if (cust_led_list[i].blmap != NULL) {
+			g_leds_data[i]->cdev.max_brightness = BLMAP_SIZE - 1;
+		}
+
 		g_leds_data[i]->cust.mode = cust_led_list[i].mode;
 		g_leds_data[i]->cust.data = cust_led_list[i].data;
 		g_leds_data[i]->cust.name = cust_led_list[i].name;

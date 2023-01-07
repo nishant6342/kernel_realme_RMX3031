@@ -62,6 +62,9 @@ typedef int (*cust_set_brightness) (int level);
 #endif /* OPLUS_FEATURE_MULTIBITS_BL */
 #endif
 
+/* blmap size */
+#define BLMAP_SIZE 256
+
 /******************************************************************************
  *  for PMIC
  *****************************************************************************/
@@ -133,14 +136,6 @@ static inline unsigned int Cust_GetBacklightLevelSupport_byPWM(void)
 	return BACKLIGHT_LEVEL_PWM_MODE_CONFIG;
 }
 
-static inline unsigned int brightness_mapping(unsigned int level)
-{
-	unsigned int mapped_level;
-
-	mapped_level = level;
-	return mapped_level;
-}
-
 struct PWM_config {
 	int clock_source;
 	int div;
@@ -169,6 +164,7 @@ struct cust_mt65xx_led {
 	enum mt65xx_led_mode mode;
 	long data;
 	struct PWM_config config_data;
+	unsigned int *blmap;
 };
 
 /**
@@ -204,5 +200,19 @@ struct nled_setting {
 	u32 blink_on_time;
 	u32 blink_off_time;
 };
+
+static inline unsigned int brightness_mapping(struct cust_mt65xx_led* led, unsigned int level)
+{
+	// Does this LED have a brightness mapping table?
+	if (led->blmap) {
+		// Yes, so use it to translate the brightness level
+		if (level >= BLMAP_SIZE) {
+			level = BLMAP_SIZE - 1;
+		}
+		level = led->blmap[level];
+	}
+
+	return level;
+}
 
 #endif				/* _LEDS_SW_H */

@@ -167,6 +167,7 @@ struct cust_mt65xx_led *get_cust_led_dtsi(void)
 	int i, ret;
 	int mode, data;
 	int pwm_config[5] = { 0 };
+	unsigned int blmap[BLMAP_SIZE] = { 0 };
 
 	if (pled_dtsi)
 		goto out;
@@ -258,6 +259,27 @@ struct cust_mt65xx_led *get_cust_led_dtsi(void)
 			break;
 		default:
 			break;
+		}
+
+		/* blmap is a 256 length unsigned int array */
+		ret = of_property_read_u32_array(led_node, "blmap",
+				blmap, BLMAP_SIZE);
+		
+		if (!ret) {
+			// Allocate memory for the blmap
+			pled_dtsi[i].blmap = kmalloc(sizeof(unsigned int) * BLMAP_SIZE, GFP_KERNEL);
+			if (!pled_dtsi[i].blmap) {
+				LEDS_DEBUG("led dts can't allocate memory for blmap\n");
+				continue;
+			}
+
+			// Copy the blmap
+			memcpy(pled_dtsi[i].blmap, blmap, sizeof(unsigned int) * BLMAP_SIZE);
+
+			LEDS_DEBUG("%s's blmap is ready\n", pled_dtsi[i].name);
+		}
+		else {
+			LEDS_DEBUG("led dts can't get blmap\n");
 		}
 	}
 
@@ -789,7 +811,7 @@ int mt_mt65xx_led_set_cust(struct cust_mt65xx_led *cust, int level)
 			} else {
 				if (BacklightLevelSupport ==
 				    BACKLIGHT_LEVEL_PWM_256_SUPPORT)
-					level = brightness_mapping(tmp_level);
+					level = brightness_mapping(cust, tmp_level);
 				else
 					level = brightness_mapto64(tmp_level);
 
@@ -837,21 +859,25 @@ int mt_mt65xx_led_set_cust(struct cust_mt65xx_led *cust, int level)
 		return mt_brightness_set_pmic(cust->data, level, bl_div_hal);
 
 	case MT65XX_LED_MODE_CUST_LCM:
+	{
+		unsigned int mapped_level = brightness_mapping(cust, level);
 		if (strcmp(cust->name, "lcd-backlight") == 0)
-			bl_brightness_hal = level;
+			bl_brightness_hal = mapped_level;
 		LEDS_DEBUG("%s backlight control by LCM\n", __func__);
 		/* warning for this API revork */
-		return ((cust_brightness_set) (cust->data)) (level, bl_div_hal);
-
+		return ((cust_brightness_set) (cust->data)) (mapped_level, bl_div_hal);
+	}
 	case MT65XX_LED_MODE_CUST_BLS_PWM:
+	{
+		unsigned int mapped_level = brightness_mapping(cust, level);
 		if (strcmp(cust->name, "lcd-backlight") == 0)
-			bl_brightness_hal = level;
+			bl_brightness_hal = mapped_level;
 #ifdef MET_USER_EVENT_SUPPORT
 		if (enable_met_backlight_tag())
-			output_met_backlight_tag(level);
+			output_met_backlight_tag(mapped_level);
 #endif
-		return ((cust_set_brightness) (cust->data)) (level);
-
+		return ((cust_set_brightness) (cust->data)) (mapped_level);
+	}
 	case MT65XX_LED_MODE_NONE:
 	default:
 		break;
