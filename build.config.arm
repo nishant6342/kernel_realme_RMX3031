@@ -1,6 +1,7 @@
 ARCH=arm
 
-CROSS_COMPILE=arm-linux-gnueabi-
+CLANG_TRIPLE=arm-linux-gnueabi-
+CROSS_COMPILE=arm-linux-androidkernel-
 LINUX_GCC_CROSS_COMPILE_PREBUILTS_BIN=prebuilts/gas/linux-x86
 
 FILES="
