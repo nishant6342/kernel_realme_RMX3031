@@ -760,7 +760,7 @@ VOID stp_do_tx_timeout(VOID)
 					reason = 45;
 				}
 
-				wmt_lib_cmd_tx_timeout_dump();
+				//wmt_lib_cmd_tx_timeout_dump();
 
 				osal_timer_stop(&stp_core_ctx.tx_timer);
 				stp_ctx_unlock(&stp_core_ctx);
@@ -3504,7 +3504,7 @@ INT32 mtk_wcn_stp_assert_timeout_handle(VOID)
 		/*host trigger assert timeout and no coredump packet. To dump EMI data*/
 		STP_INFO_FUNC("host trigger fw assert timeout!\n");
 
-		wmt_lib_assert_timeout_dump();
+		//wmt_lib_assert_timeout_dump();
 		if (mtk_wcn_stp_coredump_flag_get() != 0)
 			ret = stp_dbg_start_emi_dump();
 		else
@@ -3520,7 +3520,7 @@ INT32 mtk_wcn_stp_coredump_timeout_handle(VOID)
 	mtk_wcn_consys_stp_btif_logger_ctrl(BTIF_DUMP_BTIF_REG);
 	mtk_wcn_consys_stp_btif_logger_ctrl(BTIF_DUMP_LOG);
 
-	wmt_lib_coredump_timeout_dump();
+	//wmt_lib_coredump_timeout_dump();
 
 	if (wmt_detect_get_chip_type() == WMT_CHIP_TYPE_COMBO)
 		mtk_wcn_stp_ctx_restore();
