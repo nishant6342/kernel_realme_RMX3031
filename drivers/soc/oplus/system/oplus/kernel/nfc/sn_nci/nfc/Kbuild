@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: GPL-2.0-only
+obj-$(CONFIG_NXP_NFC_I2C) := nfc_i2c.o
+ccflags-y := -DDEBUG
+
+nfc_i2c-y := common.o \
+             common_ese.o \
+             i2c_drv.o
+

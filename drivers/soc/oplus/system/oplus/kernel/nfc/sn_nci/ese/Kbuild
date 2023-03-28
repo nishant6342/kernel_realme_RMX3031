@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
+obj-$(CONFIG_NXP_ESE_P73) := sn_ese.o
+sn_ese-y := p73.o
