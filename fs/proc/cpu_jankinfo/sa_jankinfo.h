@@ -7,7 +7,7 @@
 #ifndef _OPLUS_SA_CPUJANKINFO_H_
 #define _OPLUS_SA_CPUJANKINFO_H_
 #ifdef OPLUS_FEATURE_SCHED_ASSIST
-#include "../sched_assist/sched_assist_common.h"
+#include "../../../kernel/sched_assist/sched_assist_common.h"
 #endif
 
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_CPU_JANKINFO)

@@ -1,0 +1,47 @@
+#
+# oplus extend audio codec configuration
+#
+
+config SIA_PA_ALGO
+	bool "Use SIA PA ALGO"
+	default n
+
+config SIA_PA_ALGO_MT6833
+	bool "Use SIA PA FOR MT6833"
+	default n
+
+config SND_SOC_AW87339
+	bool "Use AW87339 As PA"
+	default n
+
+config HSKEY_BLOCK
+	bool "Block hskey for 1s"
+	default n
+#ifdef OPLUS_ARCH_EXTENDS
+config SND_SOC_AW87XXX
+        tristate "SoC Audio for awinic AW87XXX Smart K PA"
+        depends on I2C
+        help
+          This option enables support for AW87XXX Smart K PA.
+
+config SND_SOC_AW87XXX_2_X_0
+        tristate "SoC Audio for awinic AW87360 Smart K PA-Only For limu"
+        depends on I2C
+        help
+          This option enables support for AW87390 Smart K PA.
+config SND_SOC_OPLUS_PA_MANAGER
+       bool "add PA manager"
+       default n
+
+config SND_SOC_SIA81XX_V1_2_0
+	bool "Use SIA PA Driver V1.2.0"
+	default n
+
+config SND_SOC_TFA_HAPTIC
+	bool "add tfa haptic"
+	default n
+
+config SND_SOC_FSA
+        bool "add fsa driver"
+	default n
+#endif /* OPLUS_ARCH_EXTENDS */
