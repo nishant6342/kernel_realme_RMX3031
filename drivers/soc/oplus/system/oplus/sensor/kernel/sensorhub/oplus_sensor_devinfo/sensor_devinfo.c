@@ -922,7 +922,7 @@ static struct proc_node sensor_feature_file[] = {
 	{"gold_rear_cct_factor", GOLD_REAR_CCT_FACTOR},
 };
 
-static int oplus_sensor_feature_init()
+static int oplus_sensor_feature_init(void)
 {
 	struct proc_dir_entry *p_entry;
 	static struct proc_dir_entry *oplus_sensor = NULL;

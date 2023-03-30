@@ -394,7 +394,7 @@ static OPLUS_DOMAIN_INFO_ENTRY* parse_cfg_file(const char *path, unsigned int si
     return oplus_entry;
 }
 
-struct OPLUS_DOMAIN_INFO_ENTRY* get_active_channel_cfg() {
+struct OPLUS_DOMAIN_INFO_ENTRY* get_active_channel_cfg(void) {
     DBGLOG(RLM, INFO, "get_active_channel_cfg/in \n");
     if(oplus_active_domain_info == NULL) {
         oplus_active_domain_info = parse_cfg_file(CFG_ACTIVE_CHANNEL_FILE, CFG_CHANNEL_ACTIVE_SIZE,
@@ -404,7 +404,7 @@ struct OPLUS_DOMAIN_INFO_ENTRY* get_active_channel_cfg() {
     return oplus_active_domain_info;
 }
 
-struct OPLUS_DOMAIN_INFO_ENTRY* get_passive_channel_cfg() {
+struct OPLUS_DOMAIN_INFO_ENTRY* get_passive_channel_cfg(void) {
     DBGLOG(RLM, INFO, "get_passive_channel_cfg/in \n");
     if(oplus_passive_domain_info == NULL) {
         oplus_passive_domain_info = parse_cfg_file(CFG_PASSIVE_CHANNEL_FILE, CFG_CHANNEL_PASSIVE_SIZE,

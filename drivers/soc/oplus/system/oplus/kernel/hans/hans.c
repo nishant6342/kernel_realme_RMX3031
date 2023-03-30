@@ -77,7 +77,7 @@ static inline int genl_msg_mk_usr_msg(struct sk_buff *skb, int type, void *data,
 /*
  *reuse LOOPBACK and FROZEN_TRANS channel to notify framework whether kernel support cgroupv2 or not
  */
-static void hans_kern_support_cgrpv2() {
+static void hans_kern_support_cgrpv2(void) {
 	/*notify framework that kernel support cgroupv2*/
 	hans_report(PKG, -1, -1, -1, -1, "PKG", HANS_USE_CGRPV2);
 	printk(KERN_ERR "%s: hans support cgroupv2\n", __func__);

@@ -349,7 +349,7 @@ struct CAMERA_DEVICE_INFO gImgEepromInfo_19131 = {
 };
 
 
-void oplus_imgsensor_hwcfg()
+void oplus_imgsensor_hwcfg(void)
 {
          oplus_gimgsensor_sensor_list = gimgsensor_sensor_list_19131;
          oplus_imgsensor_custom_config = imgsensor_custom_config_19131;

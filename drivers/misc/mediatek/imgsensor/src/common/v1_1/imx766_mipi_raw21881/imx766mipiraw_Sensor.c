@@ -662,7 +662,7 @@ static void imx766_set_pdaf_reg_setting(MUINT32 regNum, kal_uint16 *regDa)
     imx766_table_write_cmos_sensor(regDa, regNum*2);
 }
 
-static kal_uint32 get_cur_exp_cnt(){
+static kal_uint32 get_cur_exp_cnt(void){
     kal_uint32 exp_cnt = 1;
 
     if (0x1 == (read_cmos_sensor_8(0x33D0) & 0x1)) { // DOL_EN

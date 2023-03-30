@@ -3988,7 +3988,7 @@ static void custom10_setting(void)
      LOG_INF("%s end\n", __func__);
 }
 
-void Imx615_fab_read()
+void imx615_fab_read(void)
 {
     kal_uint16 reg_0xa01 = 0;
     kal_uint16 reg_0xa1f = 0;

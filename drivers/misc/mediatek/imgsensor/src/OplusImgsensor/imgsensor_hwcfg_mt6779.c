@@ -1247,7 +1247,7 @@ struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence_19357[] = {
 	{NULL,},
 };
 
-void oplus_imgsensor_hwcfg()
+void oplus_imgsensor_hwcfg(void)
 {
 	if (is_project(19536) || is_project(19537) ||
 		is_project(19538) || is_project(19539) ||
