@@ -12,7 +12,7 @@ export ARCH=arm64
 export KBUILD_BUILD_HOST=origin
 export KBUILD_BUILD_USER="nishant6342"
 clangbin=clang/bin/clang
-if ! [ -a $clangbin ]; then git clone --depth=1 https://github.com/Project-Elixir/android_prebuilts_clang_host_linux-x86_clang-r437112 clang
+if ! [ -a $clangbin ]; then git clone --depth=1 https://gitlab.com/projectelixiros/android_prebuilts_clang_host_linux-x86_clang-r468909b clang
 fi
 gcc64bin=los-4.9-64/bin/aarch64-linux-android-as
 if ! [ -a $gcc64bin ]; then git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 los-4.9-64
