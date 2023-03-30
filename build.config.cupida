@@ -1,5 +1,5 @@
 # Define Building
-BRANCH=android-4.19
+BRANCH=android-4.19-stable
 
 # Build Flags
 ARCH=arm64
@@ -7,14 +7,13 @@ CC=clang
 DEPMOD=depmod
 LLVM=1
 LLVM_IAS=1
-LD=ld.lld
 
 # Compiler
 BUILDTOOLS_PREBUILT_BIN=build/build-tools/path/linux-x86
-CLANG_PREBUILT_BIN=prebuilts-master/clang/host/linux-x86/clang-r450784e/bin
+CLANG_PREBUILT_BIN=prebuilts-master/clang/host/linux-x86/clang-r383902/bin
+LD_LIBRARY_PATH=prebuilts-master/clang/host/linux-x86/clang-r383902/lib64:$$LD_LIBRARY_PATH
 LINUX_GCC_CROSS_COMPILE_PREBUILTS_BIN=prebuilts-master/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin
 LINUX_GCC_CROSS_COMPILE_ARM32_PREBUILTS_BIN=prebuilts-master/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin
-LD_LIBRARY_PATH=prebuilts-master/clang/host/linux-x86/clang-r450784e/lib64:$$LD_LIBRARY_PATH
 CROSS_COMPILE=aarch64-linux-android-4.9-
 CROSS_COMPILE_ARM32=arm-linux-androideabi-4.9-
 CLANG_TRIPLE=aarch64-linux-gnu-
@@ -36,4 +35,3 @@ STOP_SHIP_TRACEPRINTK=1
 IN_KERNEL_MODULES=1
 DO_NOT_STRIP_MODULES=1
 SKIP_MRPROPER=1
-
