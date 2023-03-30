@@ -13,7 +13,7 @@ ifeq ($(CONFIG_MACH_MT6781),y)
     MTK_PLATFORM := mt6781
 endif
 
-MET_ROOT_DIR := $(src)
+MET_ROOT_DIR := $(srctree)/drivers/misc/mediatek/met_drv_v2
 MET_COMMON_DIR := $(wildcard $(MET_ROOT_DIR)/common)
 MET_BUILD_DEFAULT := n
 
