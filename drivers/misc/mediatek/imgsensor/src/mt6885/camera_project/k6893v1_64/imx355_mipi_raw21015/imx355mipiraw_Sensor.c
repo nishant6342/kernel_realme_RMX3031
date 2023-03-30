@@ -30,7 +30,7 @@ extern unsigned char imx355_get_module_id(void);
 #define MODULE_ID_OFFSET 0x0000
 
 #define IMX355_EEPROM_SLAVE_ADDRESS 0xA2
-extern Eeprom_DistortionParamsRead(enum IMGSENSOR_SENSOR_IDX sensor_idx, kal_uint16 slaveAddr);
+extern int Eeprom_DistortionParamsRead(enum IMGSENSOR_SENSOR_IDX sensor_idx, kal_uint16 slaveAddr);
 
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
 static struct imgsensor_info_struct imgsensor_info = {

@@ -2606,7 +2606,7 @@ struct CAMERA_DEVICE_INFO gImgEepromInfo_21881= {
 };
 #endif
 
-void oplus_imgsensor_hwcfg()
+void oplus_imgsensor_hwcfg(void)
 {
     if (is_project(20131) || is_project(20133)
           || is_project(20255) || is_project(20257)) {

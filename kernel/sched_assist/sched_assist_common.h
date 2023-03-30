@@ -284,7 +284,7 @@ static inline bool sched_assist_scene(unsigned int scene)
 	}
 }
 
-static inline bool is_sched_assist_scene() {
+static inline bool is_sched_assist_scene(void) {
 	return sched_assist_scene(SA_SLIDE) || sched_assist_scene(SA_INPUT) || sched_assist_scene(SA_LAUNCHER_SI) || sched_assist_scene(SA_ANIM);
 }
 

@@ -52,6 +52,7 @@ make -j$(nproc --all)   O=out \
                         AS=llvm-as \
                         AR=llvm-ar \
                         NM=llvm-nm \
+                        LLVM_IAS=1 \
                         OBJCOPY=llvm-objcopy \
                         CONFIG_NO_ERROR_ON_MISMATCH=y
 }

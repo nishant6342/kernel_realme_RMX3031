@@ -5099,7 +5099,7 @@ static void haptic_clean_buf(struct aw8697 *aw8697, int status)
 	}
 }
 
-static inline unsigned int aw8697_get_sys_msecs()
+static inline unsigned int aw8697_get_sys_msecs(void)
 {
 	struct timespec64 ts64 = current_kernel_time64();
 	return jiffies_to_msecs(timespec64_to_jiffies(&ts64));

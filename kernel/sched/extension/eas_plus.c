@@ -292,7 +292,7 @@ inline int hinted_cpu_prefer(int task_prefer)
 }
 
 #ifdef CONFIG_OPLUS_FG_BOOST
-extern oplus_task_sched_boost(struct task_struct *p, int *task_prefer);
+extern int oplus_task_sched_boost(struct task_struct *p, int *task_prefer);
 #endif /* CONFIG_OPLUS_FG_BOOST */
 int select_task_prefer_cpu(struct task_struct *p, int new_cpu)
 {

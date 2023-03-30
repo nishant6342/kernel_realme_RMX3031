@@ -553,7 +553,7 @@ static kal_uint32 get_exp_cnt_by_scenario(kal_uint32 scenario)
     return max(exp_cnt, (kal_uint32)1);
 }
 
-static kal_uint32 get_cur_exp_cnt()
+static kal_uint32 get_cur_exp_cnt(void)
 {
     kal_uint32 exp_cnt = 1;
 

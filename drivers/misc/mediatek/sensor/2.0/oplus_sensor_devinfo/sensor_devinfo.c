@@ -47,11 +47,11 @@ extern int mtk_nanohub_cfg_to_hub(uint8_t sensor_id, uint8_t *data, uint8_t coun
 int register_lcdinfo_notifier(struct notifier_block *nb);
 int unregister_lcdinfo_notifier(struct notifier_block *nb);
 
-__attribute__((weak)) int register_lcdinfo_notifier() {
+int __attribute__((weak))register_lcdinfo_notifier(struct notifier_block *nb) {
 	return -1;
 }
 
-__attribute__((weak)) int unregister_lcdinfo_notifier() {
+int __attribute__((weak))unregister_lcdinfo_notifier(struct notifier_block *nb) {
 	return -1;
 }
 
@@ -1694,7 +1694,7 @@ static const struct file_operations Sensor_info_fops = {
 	.release = single_release,
 };
 
-static int oplus_sensor_feature_init()
+static int oplus_sensor_feature_init(void)
 {
 	struct proc_dir_entry *p_entry;
 	static struct proc_dir_entry *oplus_sensor = NULL;

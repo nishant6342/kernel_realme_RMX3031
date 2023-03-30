@@ -147,7 +147,7 @@ u64 sysctl_mmapsem_uninterruptable_time;
 #endif
 
 #ifdef CONFIG_OPLUS_FEATURE_AUDIO_OPT
-extern sysctl_sched_impt_tgid;
+extern int sysctl_sched_impt_tgid;
 #endif
 
 static int __maybe_unused neg_one = -1;

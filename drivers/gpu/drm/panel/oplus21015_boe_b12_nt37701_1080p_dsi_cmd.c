@@ -1420,7 +1420,7 @@ static bool panel_no_video_cmd_switch_state(struct drm_panel *panel)
 }
 #endif
 
-static int lcm_get_aod_state()
+static int lcm_get_aod_state(void)
 {
 	return aod_state;
 }

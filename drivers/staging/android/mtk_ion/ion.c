@@ -724,7 +724,7 @@ static int chg_sched(struct task_struct *tsk, bool enter)
 }
 
 /* TODO use task comm may not safe. */
-inline is_allocator_svc(struct task_struct *tsk)
+inline int is_allocator_svc(struct task_struct *tsk)
 {
 	return (tsk->tgid == alloc_svc_tgid);
 }

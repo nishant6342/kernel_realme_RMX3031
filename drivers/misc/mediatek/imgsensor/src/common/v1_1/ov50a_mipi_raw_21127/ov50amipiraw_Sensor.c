@@ -608,7 +608,7 @@ bool Checksum_EEPROM(kal_uint8 *buffer, kal_uint32 size, kal_uint8 read_checksum
 	return 0;
 }
 
-static void read_QSC_from_EEPROM()
+static void read_QSC_from_EEPROM(void)
 {
 	kal_uint16 idx = 0;
 	kal_uint16 * QSC_setting = OV50A_QSC_setting;

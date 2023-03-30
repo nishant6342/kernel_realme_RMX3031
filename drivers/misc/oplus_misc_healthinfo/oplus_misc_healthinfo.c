@@ -263,7 +263,7 @@ static int oplus_misc_healthinfo_init_proc(struct oplus_misc_healthinfo_para *om
 	return ret;
 }
 
-static oplus_misc_healthinfo_parse_dt(struct device *dev, struct oplus_misc_healthinfo_para *omhp)
+static int oplus_misc_healthinfo_parse_dt(struct device *dev, struct oplus_misc_healthinfo_para *omhp)
 {
 	struct device_node *dn = dev->of_node;
 	if (!dn) {
