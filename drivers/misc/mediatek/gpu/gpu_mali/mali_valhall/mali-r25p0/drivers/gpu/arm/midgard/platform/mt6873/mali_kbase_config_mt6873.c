@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0+
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (c) 2019 MediaTek Inc.
  */
@@ -12,13 +12,13 @@
 #include <mali_kbase.h>
 #include <mali_kbase_defs.h>
 #include <mali_kbase_config.h>
+#include <mt-plat/mboot_params.h>
 #include "mali_kbase_cpu_mt6873.h"
 #include "mali_kbase_config_platform.h"
 #include "platform/mtk_platform_common.h"
 #include "ged_dvfs.h"
 #include "mtk_gpufreq.h"
-#include "mtk_idle.h"
-#ifdef CONFIG_MTK_GPU_SWPM_SUPPORT
+#if IS_ENABLED(CONFIG_MTK_GPU_SWPM_SUPPORT)
 #include <mtk_gpu_power_sspm_ipi.h>
 #endif
 
@@ -28,8 +28,9 @@
 
 DEFINE_MUTEX(g_mfg_lock);
 
-//FIXME
 static int g_curFreqID;
+
+//FIXME
 static int g_is_suspend;
 
 enum gpu_dvfs_status_step {
@@ -52,7 +53,7 @@ enum gpu_dvfs_status_step {
 
 static inline void gpu_dvfs_status_footprint(enum gpu_dvfs_status_step step)
 {
-#ifdef CONFIG_MTK_RAM_CONSOLE
+#if IS_ENABLED(CONFIG_MTK_AEE_IPANIC)
 	aee_rr_rec_gpu_dvfs_status(step |
 				(aee_rr_curr_gpu_dvfs_status() & 0xF0));
 #endif
@@ -60,7 +61,7 @@ static inline void gpu_dvfs_status_footprint(enum gpu_dvfs_status_step step)
 
 static inline void gpu_dvfs_status_reset_footprint(void)
 {
-#ifdef CONFIG_MTK_RAM_CONSOLE
+#if IS_ENABLED(CONFIG_MTK_AEE_IPANIC)
 	aee_rr_rec_gpu_dvfs_status(0);
 #endif
 }
@@ -165,7 +166,7 @@ static int pm_callback_power_on(struct kbase_device *kbdev)
 	mutex_lock(&g_mfg_lock);
 	ret = pm_callback_power_on_nolock(kbdev);
 	mutex_unlock(&g_mfg_lock);
-#ifdef CONFIG_MTK_GPU_SWPM_SUPPORT
+#if IS_ENABLED(CONFIG_MTK_GPU_SWPM_SUPPORT)
 	MTKGPUPower_model_resume();
 #endif
 
@@ -175,7 +176,7 @@ static int pm_callback_power_on(struct kbase_device *kbdev)
 static void pm_callback_power_off(struct kbase_device *kbdev)
 {
 	mutex_lock(&g_mfg_lock);
-#ifdef CONFIG_MTK_GPU_SWPM_SUPPORT
+#if IS_ENABLED(CONFIG_MTK_GPU_SWPM_SUPPORT)
 	MTKGPUPower_model_suspend();
 #endif
 	pm_callback_power_off_nolock(kbdev);

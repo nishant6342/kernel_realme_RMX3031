@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: GPL-2.0+
+// SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright (c) 2019 MediaTek Inc.
+ * Copyright (c) 2021 MediaTek Inc.
  */
 
 #include <linux/ioport.h>
@@ -14,11 +14,13 @@
 #include <mali_kbase_config.h>
 #include "mali_kbase_config_platform.h"
 #include "platform/mtk_platform_common.h"
-#include "ged_dvfs.h"
-#include "mtk_gpufreq.h"
-#include "mtk_idle.h"
+#include <ged_dvfs.h>
+#include <mtk_gpufreq.h>
+#if IS_ENABLED(CONFIG_MTK_AEE_IPANIC)
+#include <mboot_params.h>
+#endif
 #if IS_ENABLED(CONFIG_MTK_GPU_SWPM_SUPPORT)
-//#include <mtk_gpu_power_sspm_ipi.h>
+#include <mtk_gpu_power_sspm_ipi.h>
 #endif
 
 #define MALI_TAG				"[GPU/MALI]"
@@ -51,7 +53,7 @@ enum gpu_dvfs_status_step {
 
 static inline void gpu_dvfs_status_footprint(enum gpu_dvfs_status_step step)
 {
-#if IS_ENABLED(CONFIG_MTK_RAM_CONSOLE)
+#if IS_ENABLED(CONFIG_MTK_AEE_IPANIC)
 	aee_rr_rec_gpu_dvfs_status(step |
 				(aee_rr_curr_gpu_dvfs_status() & 0xF0));
 #endif
@@ -59,14 +61,28 @@ static inline void gpu_dvfs_status_footprint(enum gpu_dvfs_status_step step)
 
 static inline void gpu_dvfs_status_reset_footprint(void)
 {
-#if IS_ENABLED(CONFIG_MTK_RAM_CONSOLE)
+#if IS_ENABLED(CONFIG_MTK_AEE_IPANIC)
 	aee_rr_rec_gpu_dvfs_status(0);
 #endif
 }
 
 static int pm_callback_power_on_nolock(struct kbase_device *kbdev)
 {
-	if (mt_gpufreq_bringup()) {
+#if defined(CONFIG_MTK_GPUFREQ_V2)
+	if (mtk_common_gpufreq_bringup()) {
+		mtk_common_pm_mfg_active();
+		return 1;
+	}
+
+	if (!gpufreq_power_ctrl_enable()) {
+		mtk_common_pm_mfg_active();
+#if IS_ENABLED(CONFIG_MALI_MIDGARD_DVFS) && IS_ENABLED(CONFIG_MTK_GPU_COMMON_DVFS)
+		ged_dvfs_gpu_clock_switch_notify(1);
+#endif
+		return 1;
+	}
+#else /* CONFIG_MTK_GPUFREQ_V2 */
+	if (mtk_common_gpufreq_bringup()) {
 		mtk_common_pm_mfg_active();
 		return 1;
 	}
@@ -78,6 +94,7 @@ static int pm_callback_power_on_nolock(struct kbase_device *kbdev)
 #endif
 		return 1;
 	}
+#endif /* CONFIG_MTK_GPUFREQ_V2 */
 
 	if (mtk_common_pm_is_mfg_active())
 		return 0;
@@ -92,11 +109,22 @@ static int pm_callback_power_on_nolock(struct kbase_device *kbdev)
 	}
 
 	/* on,off/ SWCG(BG3D)/ MTCMOS/ BUCK */
+#if defined(CONFIG_MTK_GPUFREQ_V2)
+	if (gpufreq_power_control(POWER_ON) < 0) {
+		mali_pr_info("@%s: fail to power on\n", __func__);
+		return 0;
+	}
+#else
 	mt_gpufreq_power_control(POWER_ON, CG_ON, MTCMOS_ON, BUCK_ON);
+#endif /* CONFIG_MTK_GPUFREQ_V2 */
 
 	gpu_dvfs_status_footprint(GPU_DVFS_STATUS_STEP_2);
 
+#if defined(CONFIG_MTK_GPUFREQ_V2)
+	gpufreq_set_timestamp();
+#else
 	mt_gpufreq_set_timestamp();
+#endif /* CONFIG_MTK_GPUFREQ_V2 */
 
 	/* set a flag to enable GPU DVFS */
 	mtk_common_pm_mfg_active();
@@ -119,11 +147,19 @@ static int pm_callback_power_on_nolock(struct kbase_device *kbdev)
 
 static void pm_callback_power_off_nolock(struct kbase_device *kbdev)
 {
-	if (mt_gpufreq_bringup())
+#if defined(CONFIG_MTK_GPUFREQ_V2)
+	if (mtk_common_gpufreq_bringup())
+		return;
+
+	if (!gpufreq_power_ctrl_enable())
+		return;
+#else
+	if (mtk_common_gpufreq_bringup())
 		return;
 
 	if (!mt_gpufreq_power_ctl_en())
 		return;
+#endif /* CONFIG_MTK_GPUFREQ_V2 */
 
 	if (!mtk_common_pm_is_mfg_active())
 		return;
@@ -149,12 +185,23 @@ static void pm_callback_power_off_nolock(struct kbase_device *kbdev)
 	gpu_dvfs_status_footprint(GPU_DVFS_STATUS_STEP_9);
 
 	/* check MFG bus if idle */
+#if defined(CONFIG_MTK_GPUFREQ_V2)
+	gpufreq_check_bus_idle();
+#else
 	mt_gpufreq_check_bus_idle();
+#endif /* CONFIG_MTK_GPUFREQ_V2 */
 
 	gpu_dvfs_status_footprint(GPU_DVFS_STATUS_STEP_A);
 
 	/* on,off/ SWCG(BG3D)/ MTCMOS/ BUCK */
+#if defined(CONFIG_MTK_GPUFREQ_V2)
+	if (gpufreq_power_control(POWER_OFF) < 0) {
+		mali_pr_info("@%s: fail to power off\n", __func__);
+		return;
+	}
+#else
 	mt_gpufreq_power_control(POWER_OFF, CG_OFF, MTCMOS_OFF, BUCK_OFF);
+#endif /* CONFIG_MTK_GPUFREQ_V2 */
 
 	gpu_dvfs_status_footprint(GPU_DVFS_STATUS_STEP_B);
 }
@@ -166,7 +213,7 @@ static int pm_callback_power_on(struct kbase_device *kbdev)
 	mutex_lock(&g_mfg_lock);
 	ret = pm_callback_power_on_nolock(kbdev);
 #if IS_ENABLED(CONFIG_MTK_GPU_SWPM_SUPPORT)
-//	MTKGPUPower_model_resume();
+	MTKGPUPower_model_resume();
 #endif
 	mutex_unlock(&g_mfg_lock);
 
@@ -177,7 +224,7 @@ static void pm_callback_power_off(struct kbase_device *kbdev)
 {
 	mutex_lock(&g_mfg_lock);
 #if IS_ENABLED(CONFIG_MTK_GPU_SWPM_SUPPORT)
-//	MTKGPUPower_model_suspend();
+	MTKGPUPower_model_suspend();
 #endif
 	pm_callback_power_off_nolock(kbdev);
 	mutex_unlock(&g_mfg_lock);
