@@ -528,7 +528,7 @@ void bt_notify_state(void)
  *     0 if success, otherwise error code
  *
  */
-void bt_report_hw_error()
+void bt_report_hw_error(void)
 {
 	const uint8_t HCI_EVT_HW_ERROR[] = {0x04, 0x10, 0x01, 0x00};
 	btmtk_recv(g_sbdev->hdev, HCI_EVT_HW_ERROR, sizeof(HCI_EVT_HW_ERROR));
@@ -1238,7 +1238,7 @@ int32_t btmtk_wcn_btif_open(void)
  * Return Value:
  *     0 if success, otherwise error code
  */
-int32_t btmtk_wcn_btif_close()
+int32_t btmtk_wcn_btif_close(void)
 {
 	int32_t ret = 0;
 	struct btmtk_btif_dev *cif_dev = (struct btmtk_btif_dev *)g_sbdev->cif_dev;
