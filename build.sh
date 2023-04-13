@@ -73,7 +73,7 @@ cd AnyKernel
 zip -r9 ORIGIN-OSS-KERNEL-RMX3031.zip *
 #curl --upload-file ORIGIN-OSS-KERNEL-RMX3031.zip https://transfer.sh/
 curl -sL https://git.io/file-transfer | sh
-./transfer wet ORIGIN-OSS-KERNEL-RMX3031.zip
+./transfer anon ORIGIN-OSS-KERNEL-RMX3031.zip
 cd ../
 fi
 }
