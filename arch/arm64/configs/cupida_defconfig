@@ -446,8 +446,11 @@ CONFIG_CMDLINE_FROM_BOOTLOADER=y
 # CONFIG_EFI is not set
 CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE=y
 CONFIG_BUILD_ARM64_DTB_OVERLAY_IMAGE=y
-CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE_NAMES="mediatek/mt6893 mediatek/k6893v1_64_k419_dummy0 mediatek/oplus6893_20827 mediatek/oplus6893_20827_EVT mediatek/oplus6893_20171 mediatek/k6893v1_64_k419_dummy4 mediatek/k6893v1_64_k419_dummy5 mediatek/k6893v1_64_k419_dummy6 mediatek/oplus6893_21061 mediatek/oplus6893_21015_v1 mediatek/oplus6893_21015_v2 mediatek/oplus6893_20615_v1 mediatek/oplus6893_20615_v2 mediatek/oplus6893_21609 mediatek/oplus6893_21651"
-CONFIG_BUILD_ARM64_DTB_OVERLAY_IMAGE_NAMES="mediatek/k6893v1_64_k419_dummy0 mediatek/oplus6893_20827 mediatek/oplus6893_20827_EVT mediatek/oplus6893_20171 mediatek/k6893v1_64_k419_dummy4 mediatek/k6893v1_64_k419_dummy5 mediatek/k6893v1_64_k419_dummy6 mediatek/oplus6893_21061 mediatek/oplus6893_21015_v1 mediatek/oplus6893_21015_v2 mediatek/oplus6893_20615_v1 mediatek/oplus6893_20615_v2 mediatek/oplus6893_21609 mediatek/oplus6893_21651"
+CONFIG_IMG_GZ_DTB=y
+# CONFIG_IMG_DTB is not set
+CONFIG_BUILD_ARM64_APPENDED_KERNEL_IMAGE_NAME="Image.gz-dtb"
+CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE_NAMES="mediatek/mt6893"
+CONFIG_BUILD_ARM64_DTB_OVERLAY_IMAGE_NAMES="mediatek/oplus6893_20827 mediatek/oplus6893_20827_EVT mediatek/oplus6893_20171 mediatek/oplus6893_21061 mediatek/oplus6893_21015_v1 mediatek/oplus6893_21015_v2 mediatek/oplus6893_20615_v1 mediatek/oplus6893_20615_v2 mediatek/oplus6893_21609 mediatek/oplus6893_21651 mediatek/k6893v1_64_k419 mediatek/k6893v1_64_k419_dummy0 mediatek/k6893v1_64_k419_dummy1 mediatek/k6893v1_64_k419_dummy2 mediatek/k6893v1_64_k419_dummy3 mediatek/k6893v1_64_k419_dummy4 mediatek/k6893v1_64_k419_dummy5 mediatek/k6893v1_64_k419_dummy6 mediatek/k6893v1_64_k419_dummy7 mediatek/k6893v1_64_k419_dummy8 mediatek/k6893v1_64_k419_dummy9"
 CONFIG_COMPAT=y
 CONFIG_KUSER_HELPERS=y
 
@@ -1542,6 +1545,7 @@ CONFIG_ARCH_MTK_PROJECT="k6893v1_64"
 # CONFIG_FPGA_EARLY_PORTING is not set
 # CONFIG_MTK_ENG_BUILD is not set
 CONFIG_MTK_LM_MODE=y
+CONFIG_MTK_DTBO_FEATURE=y
 
 #
 # Storage
