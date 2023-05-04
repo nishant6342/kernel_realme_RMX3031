@@ -59,7 +59,7 @@ make -j$(nproc --all)   O=out \
 
 function zupload()
 {
-zimage=out/arch/arm64/boot/Image.gz
+zimage=out/arch/arm64/boot/Image.gz-dtb
 if ! [ -a $zimage ];
 then
 echo  " Failed to compile zImage, fix the errors first "
@@ -68,7 +68,7 @@ echo -e " Build succesful, generating flashable zip now "
 anykernelbin=AnyKernel/anykernel.sh
 if ! [ -a $anykernelbin ]; then git clone --depth=1 https://github.com/nishant6342/AnyKernel3 -b cupida  AnyKernel
 fi
-cp out/arch/arm64/boot/Image.gz AnyKernel
+cp out/arch/arm64/boot/Image.gz-dtb AnyKernel
 cd AnyKernel
 zip -r9 ORIGIN-OSS-KERNEL-RMX3031.zip *
 #curl --upload-file ORIGIN-OSS-KERNEL-RMX3031.zip https://transfer.sh/
