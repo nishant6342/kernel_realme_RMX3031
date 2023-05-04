@@ -1058,7 +1058,7 @@ static int fts_enable_black_gesture(struct fts_ts_data *ts_data, bool enable)
     int ret = 0;
     int state = ts_data->gesture_state;
 
-    int config1 = 0xff;
+    int config1 = 0x50;
     int config2 = 0xff;
     int config4 = 0xff;
 
