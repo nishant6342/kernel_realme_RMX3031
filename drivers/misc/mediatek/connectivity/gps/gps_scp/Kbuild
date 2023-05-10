@@ -33,7 +33,11 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/conn_scp/conap_scp
 ###############################################################################
 GPS2SCP_TEST_SUPPORT :=n
 MODULE_NAME := gps_scp
+ifeq ($(CONFIG_WLAN_DRV_BUILD_IN),y)
+obj-y += $(MODULE_NAME).o
+else
 obj-m += $(MODULE_NAME).o
+endif
 
 $(MODULE_NAME)-objs += gps2scp.o
 ifeq ($(GPS2SCP_TEST_SUPPORT),y)

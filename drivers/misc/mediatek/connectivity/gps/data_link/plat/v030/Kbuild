@@ -62,8 +62,11 @@ KBUILD_MODPOST_FAIL_ON_WARNINGS := y
 ###############################################################################
 export GPS_PLATFORM := v030
 MODULE_NAME := gps_drv_dl_$(GPS_PLATFORM)
+ifeq ($(CONFIG_WLAN_DRV_BUILD_IN),y)
+obj-y += $(MODULE_NAME).o
+else
 obj-m += $(MODULE_NAME).o
-
+endif
 GPS_DRV_CONTROL_LNA := n
 GPS_DL_HAS_MOCK := n
 GPS_SRC_FOLDER := $(srctree)/drivers/misc/mediatek/connectivity/gps/data_link

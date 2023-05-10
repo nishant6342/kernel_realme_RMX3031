@@ -34,11 +34,9 @@ KO_CODE_PATH := $(if $(filter /%,$(src)),,$(srctree)/)$(src)
 
 MODULE_NAME := conninfra
 ifeq ($(CONFIG_WLAN_DRV_BUILD_IN),y)
-$(warning $(MODULE_NAME) build-in boot.img)
 obj-y += $(MODULE_NAME).o
 PATH_TO_CONNINFRA_DRV := $(srctree)/$(src)
 else
-$(warning $(MODULE_NAME) is kernel module)
 obj-m += $(MODULE_NAME).o
 PATH_TO_CONNINFRA_DRV := $(KO_CODE_PATH)
 endif

@@ -2,6 +2,8 @@
 # Copyright (c) 2021 Mediatek Inc.
 
 CFG_FM_CHIP := mt6635
+CFG_FM_PLAT := connac2x
+CFG_BUILD_CONNAC2 := true
 
 $(info [fm_drv:Makefile] M = $(M))
 $(info [fm_drv:Makefile] FM_CHIP_ID = $(FM_CHIP_ID))
