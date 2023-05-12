@@ -5,7 +5,7 @@ menu "MediaTek SoC drivers"
 	depends on ARCH_MEDIATEK || COMPILE_TEST
 
 config MTK_CMDQ
-	tristate "MediaTek CMDQ Support"
+	bool "MediaTek CMDQ Support"
 	depends on ARCH_MEDIATEK || COMPILE_TEST
 	select MAILBOX
 	select MTK_CMDQ_MBOX

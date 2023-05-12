@@ -3,7 +3,6 @@
 
 config OPLUS_MEMLEAK_DETECT
 	string
-	option env="OPLUS_MEMLEAK_DETECT"
 
 config KMALLOC_DEBUG
 	default n

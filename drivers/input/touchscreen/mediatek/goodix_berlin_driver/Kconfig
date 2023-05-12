@@ -2,7 +2,7 @@
 # Goodix touchscreen driver configuration
 #
 menuconfig TOUCHSCREEN_GOODIX_BRL
-	tristate "Goodix berlin touchscreen"
+	bool "Goodix berlin touchscreen"
 	help
 	  Say Y here if you have a Goodix berlin series touch controller
 	  to your system

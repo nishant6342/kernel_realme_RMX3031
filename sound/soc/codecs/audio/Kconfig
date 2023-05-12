@@ -11,7 +11,7 @@ config SIA_PA_ALGO_MT6833
 	default n
 
 config SND_SOC_AW87339
-	bool "Use AW87339 As PA"
+	tristate "Use AW87339 As PA"
 	default n
 
 config HSKEY_BLOCK
