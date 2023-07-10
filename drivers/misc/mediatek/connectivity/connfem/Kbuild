@@ -37,11 +37,8 @@ ccflags-y += -I$(KO_CODE_PATH)/include
 # ConnFem Module
 ###############################################################################
 MODULE_NAME := connfem
-ifeq ($(CONFIG_WLAN_DRV_BUILD_IN),y)
 obj-y += $(MODULE_NAME).o
-else
-obj-m += $(MODULE_NAME).o
-endif
+
 $(MODULE_NAME)-objs += connfem_module.o
 $(MODULE_NAME)-objs += connfem_api.o
 $(MODULE_NAME)-objs += connfem_container.o
