@@ -131,7 +131,7 @@ extern bool oplus_voocphy_chip_is_null(void);
 #define charger_xlog_printk(num, fmt, ...) \
 		do { \
 			if (enable_charger_log >= (int)num) { \
-				printk(KERN_NOTICE pr_fmt("[OPLUS_CHG][%s]"fmt), __func__, ##__VA_ARGS__); \
+				pr_debug(KERN_NOTICE pr_fmt("[OPLUS_CHG][%s]"fmt), __func__, ##__VA_ARGS__); \
 			} \
 		} while (0)
 
@@ -838,7 +838,7 @@ int oplus_battery_get_property(struct power_supply *psy,
 				} else if (!chip->authenticate) {
 					val->intval = POWER_SUPPLY_STATUS_NOT_CHARGING;
 				} else {
-					val->intval = chip->prop_status;
+					val->intval = chip->prop_status == POWER_SUPPLY_STATUS_NOT_CHARGING ? POWER_SUPPLY_STATUS_DISCHARGING : chip->prop_status;
 				}
 				if (oplus_wpc_get_online_status() || oplus_chg_is_wls_present())
 					pre_batt_status = val->intval;
