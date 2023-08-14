@@ -13,10 +13,6 @@
 #include <linux/types.h>
 #include <linux/uidgid.h>
 
-#ifdef CONFIG_ANDROID_BINDER_USER_TRACKING
-#include <linux/rtc.h>
-#include <linux/time.h>
-#endif
 #ifdef CONFIG_OPLUS_FEATURE_CPU_JANKINFO
 #include "binder_alloc.h"
 #endif
@@ -141,10 +137,6 @@ struct binder_transaction_log_entry {
 	uint32_t return_error;
 	uint32_t return_error_param;
 	const char *context_name;
-#ifdef CONFIG_ANDROID_BINDER_USER_TRACKING
-	struct timespec timestamp;
-	struct timeval tv;
-#endif
 };
 
 struct binder_transaction_log {
