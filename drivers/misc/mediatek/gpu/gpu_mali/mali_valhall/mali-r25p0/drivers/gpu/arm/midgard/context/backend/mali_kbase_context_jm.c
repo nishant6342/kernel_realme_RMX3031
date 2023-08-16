@@ -114,6 +114,19 @@ static int kbase_context_submit_check(struct kbase_context *kctx)
 	return 0;
 }
 
+static void kbase_context_flush_jobs(struct kbase_context *kctx)
+{
+	kbase_jd_zap_context(kctx);
+	kthread_flush_worker(&kctx->kbdev->job_done_worker);
+}
+
+static void kbase_context_free(struct kbase_context *kctx)
+{
+	kbase_timeline_post_kbase_context_destroy(kctx);
+
+	vfree(kctx);
+}
+
 static const struct kbase_context_init context_init[] = {
 	{kbase_context_common_init, kbase_context_common_term, NULL},
 	{kbase_context_mem_pool_group_init, kbase_context_mem_pool_group_term,
