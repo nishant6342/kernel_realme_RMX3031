@@ -41,9 +41,7 @@
 #include "upmu_common.h"
 #include "upmu_sw.h"
 #include "upmu_hw.h"
-#ifdef CONFIG_THERMAL
 #include "mtk_thermal.h"
-#endif
 #ifdef CONFIG_MTK_FREQ_HOPPING
 #include "mtk_freqhopping_drv.h"
 #endif
@@ -1494,6 +1492,15 @@ unsigned int mt_gpufreq_get_thermal_limit_freq(void)
 	return g_opp_table[g_max_upper_limited_idx].gpufreq_khz;
 }
 EXPORT_SYMBOL(mt_gpufreq_get_thermal_limit_freq);
+
+/*
+ * API : get current GPU temperature
+ */
+int mt_gpufreq_get_gpu_temp(void)
+{
+	return get_immediate_gpu_wrap();
+}
+EXPORT_SYMBOL(mt_gpufreq_get_gpu_temp);
 
 /*
  * API : get current OPP table conditional index
