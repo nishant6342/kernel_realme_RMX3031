@@ -33,14 +33,6 @@
 
 #define PANIC_TIMER_STEP 100
 #define PANIC_BLINK_SPD 18
-#ifdef OPLUS_FEATURE_PHOENIX
-#include "../drivers/soc/oplus/system/oplus_phoenix/oplus_phoenix.h"
-#include <linux/timer.h>
-#include <linux/timex.h>
-#include <linux/rtc.h>
-int kernel_panic_happened = 0;
-int hwt_happened = 0;
-#endif
 #ifdef OPLUS_BUG_STABILITY
 int is_kernel_panic = 0;
 #endif
@@ -80,33 +72,6 @@ void __weak panic_smp_self_stop(void)
 	while (1)
 		cpu_relax();
 }
-
-#ifdef OPLUS_FEATURE_PHOENIX
-void deal_fatal_err(void)
-{
-    if(!phx_is_phoenix_boot_completed()) {
-
-        if(kernel_panic_happened) {
-            phx_set_boot_error(ERROR_KERNEL_PANIC);
-        } else if(hwt_happened) {
-            phx_set_boot_error(ERROR_HWT);
-        }
-
-    } else {
-        struct timespec ts;
-        struct rtc_time tm;
-        char err_info[60] = {0};
-
-        getnstimeofday(&ts);
-        rtc_time_to_tm(ts.tv_sec, &tm);
-
-        sprintf(err_info, "panic after bootup @%d-%d-%d %d:%d:%d",
-                tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-        pr_err("panic after bootup @%d-%d-%d %d:%d:%d\n",
-               tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-    }
-}
-#endif /*OPLUS_FEATURE_PHOENIX*/
 
 /*
  * Stop ourselves in NMI context if another CPU has already panicked. Arch code
