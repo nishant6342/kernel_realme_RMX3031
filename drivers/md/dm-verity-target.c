@@ -537,8 +537,8 @@ static int verity_verify_io(struct dm_verity_io *io)
 		else {
 			if (bio->bi_status) {
 				/*
-				* Error correction failed; Just return error
-				*/
+				 * Error correction failed; Just return error
+				 */
 				return -EIO;
 			}
 			if (verity_handle_err(v, DM_VERITY_BLOCK_TYPE_DATA,
