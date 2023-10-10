@@ -2702,10 +2702,11 @@ static void mtk_dsi_porch_setting_6382(struct mtk_dsi *dsi, struct cmdq_pkt *han
 		}
 	}
 
-	if (hsa < 0) {
-		DDPMSG("error!hsa = %d < 0!\n", hsa);
-		hsa = 0;
-	}
+	mtk_dsi_reset_engine(dsi);
+	mtk_dsi_lane0_ulp_mode_enter(dsi);
+	mtk_dsi_clk_ulp_mode_enter(dsi);
+	/* set the lane number as 0 to pull down mipi */
+	writel(0, dsi->regs + DSI_TXRX_CTRL);
 
 	if (hfp > data_init_byte)
 		hfp -= data_init_byte;
