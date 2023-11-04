@@ -2225,3 +2225,20 @@ out:
 	return ret;
 }
 EXPORT_SYMBOL(vfs_dedupe_file_range);
+
+//addcode start
+extern int ksu_handle_vfs_read(struct file **file_ptr, char __user **buf_ptr,
+            size_t *count_ptr, loff_t **pos);
+//addcode end
+ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
+{
+  ssize_t ret;
+    //addcode start
+    ksu_handle_vfs_read(&file, &buf, &count, &pos);
+    //addcode end
+  if (!(file->f_mode & FMODE_READ))
+    return -EBADF;
+  if (!(file->f_mode & FMODE_CAN_READ))
+    return -EINVAL;
+  if (unlikely(!access_ok(VERIFY_WRITE, buf, count)))
+    return -EFAULT;
